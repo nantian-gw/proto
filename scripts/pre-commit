@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Only run if .proto files are staged
+if ! git diff --cached --name-only | grep -q '\.proto$'; then
+    exit 0
+fi
+
+echo "→ proto files staged, running make generate..."
+
+export PATH="$HOME/go/bin:$PATH"
+make generate
+
+# If .pb.go files changed, stage them
+git add gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go
+
+echo "✓ generated code staged"

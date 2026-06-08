@@ -1,0 +1,379 @@
+syntax = "proto3";
+
+package gateway.control.v1;
+
+option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+service ConfigurationDiscoveryService {
+  rpc StreamConfiguration(stream DiscoveryRequest) returns (stream DiscoveryResponse);
+  rpc ReportStatus(StatusReport) returns (StatusAck);
+}
+
+enum DiscoveryResultStatus {
+  DISCOVERY_RESULT_STATUS_UNSPECIFIED = 0;
+  DISCOVERY_RESULT_STATUS_ACK = 1;
+  DISCOVERY_RESULT_STATUS_NACK = 2;
+}
+
+message DiscoveryRequest {
+  string node_id = 1;
+  string cluster = 2;
+  string version = 3;
+  string nonce = 4;
+  repeated string subscriptions = 5;
+  DiscoveryResultStatus result_status = 6;
+  string error_detail = 7;
+}
+
+message DiscoveryResponse {
+  string version = 1;
+  string nonce = 2;
+  ConfigSnapshot snapshot = 3;
+}
+
+message StatusReport {
+  string node_id = 1;
+  string version = 2;
+  bool ready = 3;
+  string message = 4;
+  google.protobuf.Timestamp observed_at = 5;
+}
+
+message StatusAck {
+  bool accepted = 1;
+}
+
+message ConfigSnapshot {
+  string id = 1;
+  google.protobuf.Timestamp generated_at = 2;
+  repeated Listener listeners = 3;
+  repeated HttpRoute http_routes = 4;
+  repeated GrpcRoute grpc_routes = 5;
+  repeated StreamRoute stream_routes = 6;
+  repeated BackendCluster backends = 7;
+  repeated SecretMaterial secrets = 8;
+  google.protobuf.Struct extensions = 9;
+}
+
+enum ListenerProtocol {
+  LISTENER_PROTOCOL_UNSPECIFIED = 0;
+  LISTENER_PROTOCOL_HTTP = 1;
+  LISTENER_PROTOCOL_HTTPS = 2;
+  LISTENER_PROTOCOL_GRPC = 3;
+  LISTENER_PROTOCOL_HTTP3 = 4;
+  LISTENER_PROTOCOL_TCP = 5;
+  LISTENER_PROTOCOL_UDP = 6;
+  LISTENER_PROTOCOL_TLS_PASSTHROUGH = 7;
+  LISTENER_PROTOCOL_TLS = 8;
+}
+
+enum TlsRouteMode {
+  TLS_ROUTE_MODE_UNSPECIFIED = 0;
+  TLS_ROUTE_MODE_PASSTHROUGH = 1;
+  TLS_ROUTE_MODE_TERMINATE = 2;
+}
+
+enum RouteKind {
+  ROUTE_KIND_UNSPECIFIED = 0;
+  ROUTE_KIND_HTTP = 1;
+  ROUTE_KIND_GRPC = 2;
+  ROUTE_KIND_TCP = 3;
+  ROUTE_KIND_UDP = 4;
+  ROUTE_KIND_TLS = 5;
+}
+
+message Listener {
+  string name = 1;
+  string address = 2;
+  uint32 port = 3;
+  ListenerProtocol protocol = 4;
+  repeated string hostnames = 5;
+  repeated string attached_routes = 6;
+  TlsConfig tls = 7;
+  map<string, string> metadata = 8;
+  BackendTlsConfig backend_tls = 9;
+  repeated string addresses = 10;
+}
+
+message TlsConfig {
+  bool enabled = 1;
+  bool passthrough = 2;
+  repeated string secret_refs = 3;
+  repeated string sni_hosts = 4;
+  string min_version = 5;
+  string max_version = 6;
+  FrontendValidation frontend_validation = 7;
+}
+
+message FrontendValidation {
+  repeated string ca_pems = 1;
+  string mode = 2;
+}
+
+message BackendTlsConfig {
+  string client_certificate_ref = 1;
+}
+
+message BackendTlsValidation {
+  string hostname = 1;
+  bool use_system_ca_certificates = 2;
+  repeated string ca_pems = 3;
+  repeated BackendTlsSubjectAltName subject_alt_names = 4;
+  string min_version = 5;
+  string max_version = 6;
+}
+
+enum BackendTlsSubjectAltNameType {
+  BACKEND_TLS_SUBJECT_ALT_NAME_TYPE_UNSPECIFIED = 0;
+  BACKEND_TLS_SUBJECT_ALT_NAME_TYPE_HOSTNAME = 1;
+  BACKEND_TLS_SUBJECT_ALT_NAME_TYPE_URI = 2;
+}
+
+message BackendTlsSubjectAltName {
+  BackendTlsSubjectAltNameType type = 1;
+  string value = 2;
+}
+
+message HttpRoute {
+  string name = 1;
+  string namespace = 2;
+  repeated string hostnames = 3;
+  repeated ParentRef parent_refs = 4;
+  repeated HttpRule rules = 5;
+  map<string, string> labels = 6;
+  map<string, string> annotations = 7;
+}
+
+message HttpRule {
+  repeated HttpMatch matches = 1;
+  repeated Filter filters = 2;
+  repeated BackendRef backend_refs = 3;
+  HttpRouteTimeouts timeouts = 4;
+  HttpRouteRetry retry = 5;
+  SessionPersistence session_persistence = 6;
+  string name = 7;
+}
+
+message HttpMatch {
+  string path = 1;
+  string path_type = 2;
+  string method = 3;
+  repeated HeaderMatch headers = 4;
+  repeated QueryMatch query_params = 5;
+}
+
+message HttpRouteTimeouts {
+  google.protobuf.Duration request = 1;
+  google.protobuf.Duration backend_request = 2;
+}
+
+message HttpRouteRetry {
+  repeated uint32 codes = 1;
+  uint32 attempts = 2;
+  google.protobuf.Duration backoff = 3;
+}
+
+enum SessionPersistenceType {
+  SESSION_PERSISTENCE_TYPE_UNSPECIFIED = 0;
+  SESSION_PERSISTENCE_TYPE_COOKIE = 1;
+  SESSION_PERSISTENCE_TYPE_HEADER = 2;
+}
+
+enum CookieLifetimeType {
+  COOKIE_LIFETIME_TYPE_UNSPECIFIED = 0;
+  COOKIE_LIFETIME_TYPE_SESSION = 1;
+  COOKIE_LIFETIME_TYPE_PERMANENT = 2;
+}
+
+message CookieConfig {
+  CookieLifetimeType lifetime_type = 1;
+}
+
+message SessionPersistence {
+  string session_name = 1;
+  google.protobuf.Duration absolute_timeout = 2;
+  google.protobuf.Duration idle_timeout = 3;
+  SessionPersistenceType type = 4;
+  CookieConfig cookie = 5;
+}
+
+enum LoadBalancingPolicyType {
+  LOAD_BALANCING_POLICY_TYPE_UNSPECIFIED = 0;
+  LOAD_BALANCING_POLICY_TYPE_ROUND_ROBIN = 1;
+  LOAD_BALANCING_POLICY_TYPE_CONSISTENT_HASH = 2;
+}
+
+enum ConsistentHashKeyType {
+  CONSISTENT_HASH_KEY_TYPE_UNSPECIFIED = 0;
+  CONSISTENT_HASH_KEY_TYPE_SOURCE_IP = 1;
+  CONSISTENT_HASH_KEY_TYPE_HEADER = 2;
+  CONSISTENT_HASH_KEY_TYPE_HOSTNAME = 3;
+}
+
+message ConsistentHashPolicy {
+  ConsistentHashKeyType key_type = 1;
+  string header_name = 2;
+}
+
+message LoadBalancingPolicy {
+  LoadBalancingPolicyType type = 1;
+  ConsistentHashPolicy consistent_hash = 2;
+}
+
+message GrpcRoute {
+  string name = 1;
+  string namespace = 2;
+  repeated string hostnames = 3;
+  repeated ParentRef parent_refs = 4;
+  repeated GrpcRule rules = 5;
+  map<string, string> labels = 6;
+  map<string, string> annotations = 7;
+}
+
+message GrpcRule {
+  repeated GrpcMatch matches = 1;
+  repeated Filter filters = 2;
+  repeated BackendRef backend_refs = 3;
+  SessionPersistence session_persistence = 4;
+  string name = 5;
+}
+
+message GrpcMatch {
+  string service = 1;
+  string method = 2;
+  repeated HeaderMatch headers = 3;
+  string match_type = 4;
+}
+
+message StreamRoute {
+  string name = 1;
+  string namespace = 2;
+  RouteKind kind = 3;
+  repeated ParentRef parent_refs = 4;
+  repeated StreamRule rules = 5;
+  map<string, string> labels = 6;
+  map<string, string> annotations = 7;
+}
+
+message StreamRule {
+  repeated StreamMatch matches = 1;
+  repeated BackendRef backend_refs = 2;
+  string name = 3;
+}
+
+message StreamMatch {
+  uint32 port = 1;
+  string sni_hostname = 2;
+  TlsRouteMode mode = 3;
+}
+
+message ParentRef {
+  string group = 1;
+  string kind = 2;
+  string namespace = 3;
+  string name = 4;
+  string section_name = 5;
+  uint32 port = 6;
+}
+
+message BackendRef {
+  string group = 1;
+  string kind = 2;
+  string namespace = 3;
+  string name = 4;
+  uint32 port = 5;
+  uint32 weight = 6;
+  map<string, string> metadata = 7;
+  repeated Filter filters = 8;
+}
+
+message BackendCluster {
+  string name = 1;
+  string namespace = 2;
+  string protocol = 3;
+  repeated BackendEndpoint endpoints = 4;
+  google.protobuf.Duration connect_timeout = 5;
+  google.protobuf.Duration request_timeout = 6;
+  map<string, string> metadata = 7;
+  BackendTlsValidation tls_validation = 8;
+  SessionPersistence session_persistence = 9;
+  LoadBalancingPolicy load_balancing = 10;
+  AIServiceConfig ai_service = 11;
+  TokenPolicyConfig token_policy = 12;
+  WasmPluginConfig wasm_plugin = 13;
+}
+
+message BackendEndpoint {
+  string address = 1;
+  uint32 port = 2;
+  bool healthy = 3;
+  string zone = 4;
+}
+
+message HeaderMatch {
+  string name = 1;
+  string value = 2;
+  string match_type = 3;
+}
+
+message QueryMatch {
+  string name = 1;
+  string value = 2;
+  string match_type = 3;
+}
+
+message Filter {
+  string type = 1;
+  google.protobuf.Struct config = 2;
+}
+
+message SecretMaterial {
+  string namespace = 1;
+  string name = 2;
+  string cert_pem = 3;
+  string key_pem = 4;
+}
+
+message AIServiceConfig {
+  string provider = 1;
+  string format = 2;
+  string model = 3;
+  AIServiceAuthConfig auth = 4;
+  google.protobuf.Duration timeout = 5;
+}
+
+message AIServiceAuthConfig {
+  string type = 1;
+  string secret_ref = 2;
+  string header = 3;
+}
+
+message TokenPolicyConfig {
+  uint64 tokens_per_minute = 1;
+  uint64 tokens_per_hour = 2;
+  uint64 requests_per_minute = 3;
+  string scope = 4;
+  double burst = 5;
+  string on_limit = 6;
+}
+
+message WasmPluginConfig {
+  string name = 1;
+  string namespace = 2;
+  bytes wasm_bytes = 3;
+  string sha256 = 4;
+  repeated string hooks = 5;
+  string config_json = 6;
+  WasmSandboxConfig sandbox = 7;
+}
+
+message WasmSandboxConfig {
+  uint64 max_memory_bytes = 1;
+  uint64 max_execution_time_ms = 2;
+  bool allow_network = 3;
+  bool allow_file_system = 4;
+}

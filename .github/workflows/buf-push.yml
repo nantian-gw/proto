@@ -1,0 +1,41 @@
+name: Buf Push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.proto'
+      - 'buf.yaml'
+      - 'buf.lock'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  push:
+    name: Push to BSR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Buf lint
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: .
+
+      - name: Buf breaking change check
+        uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: .
+          against: 'https://github.com/${{ github.repository }}.git#ref=HEAD~1'
+
+      - name: Buf push
+        uses: bufbuild/buf-push-action@v1
+        with:
+          input: .
+          buf_token: ${{ secrets.BUF_TOKEN }}

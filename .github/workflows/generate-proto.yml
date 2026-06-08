@@ -1,0 +1,75 @@
+name: Generate Proto
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.proto'
+      - 'Makefile'
+  pull_request:
+    paths:
+      - '**.proto'
+      - 'Makefile'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - uses: bufbuild/buf-lint-action@v1
+        with:
+          input: .
+
+  breaking:
+    name: Breaking Change Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+      - uses: bufbuild/buf-breaking-action@v1
+        with:
+          input: .
+          against: "https://github.com/${{ github.repository }}.git#branch=main"
+
+  generate:
+    name: Verify Generated Code
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+      - name: Install protoc
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq protobuf-compiler
+      - name: Install Go plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+      - name: Generate
+        run: make generate
+      - name: Check generated code is up to date
+        run: |
+          if ! git diff --exit-code gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go; then
+            echo "::error::Generated .pb.go files are out of date. Run 'make generate' locally and push the changes."
+            echo ""
+            echo "Changes detected:"
+            git diff --stat gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go
+            exit 1
+          fi
+          echo "Generated code is up to date."
