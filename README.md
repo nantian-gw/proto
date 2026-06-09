@@ -27,8 +27,20 @@ This repository follows [Semantic Versioning](https://semver.org). Breaking chan
 
 ## Generation
 
+Install the [Buf CLI](https://buf.build/docs/installation), then run:
+
 ```bash
+buf lint
 buf generate
+```
+
+`make generate` is a wrapper around `buf generate`. Generated Go files are
+checked in so Go consumers can import this module directly.
+
+Before changing `.proto` files, run:
+
+```bash
+make verify
 ```
 
 ## License

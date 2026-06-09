@@ -6,67 +6,42 @@ on:
     paths:
       - '**.proto'
       - 'Makefile'
+      - 'buf.yaml'
+      - 'buf.gen.yaml'
   pull_request:
     paths:
       - '**.proto'
       - 'Makefile'
+      - 'buf.yaml'
+      - 'buf.gen.yaml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  lint:
-    name: Lint
+  verify:
+    name: Verify Proto
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v6
       - uses: bufbuild/buf-setup-action@v1
         with:
           github_token: ${{ github.token }}
-      - uses: bufbuild/buf-lint-action@v1
-        with:
-          input: .
-
-  breaking:
-    name: Breaking Change Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: bufbuild/buf-setup-action@v1
-        with:
-          github_token: ${{ github.token }}
-      - uses: bufbuild/buf-breaking-action@v1
-        with:
-          input: .
-          against: "https://github.com/${{ github.repository }}.git#branch=main"
-
-  generate:
-    name: Verify Generated Code
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-      - name: Install protoc
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq protobuf-compiler
-      - name: Install Go plugins
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
-      - name: Generate
-        run: make generate
+      - name: Buf lint
+        run: buf lint
+      - name: Breaking change check
+        if: github.event_name == 'pull_request'
+        run: buf breaking --against "https://github.com/${{ github.repository }}.git#branch=main"
+      - name: Buf generate
+        run: buf generate
       - name: Check generated code is up to date
         run: |
           if ! git diff --exit-code gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go; then
-            echo "::error::Generated .pb.go files are out of date. Run 'make generate' locally and push the changes."
+            echo "::error::Generated .pb.go files are out of date. Run 'buf generate' or 'make generate' locally and push the changes."
             echo ""
             echo "Changes detected:"
             git diff --stat gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go

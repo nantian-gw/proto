@@ -6,7 +6,7 @@ if ! git diff --cached --name-only | grep -q '\.proto$'; then
     exit 0
 fi
 
-echo "→ proto files staged, running make generate..."
+echo "→ proto files staged, running make generate via buf..."
 
 export PATH="$HOME/go/bin:$PATH"
 make generate
