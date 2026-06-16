@@ -496,16 +496,17 @@ func (ConsistentHashKeyType) EnumDescriptor() ([]byte, []int) {
 }
 
 type DiscoveryRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NodeId        string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
-	Cluster       string                 `protobuf:"bytes,2,opt,name=cluster,proto3" json:"cluster,omitempty"`
-	Version       string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
-	Nonce         string                 `protobuf:"bytes,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	Subscriptions []string               `protobuf:"bytes,5,rep,name=subscriptions,proto3" json:"subscriptions,omitempty"`
-	ResultStatus  DiscoveryResultStatus  `protobuf:"varint,6,opt,name=result_status,json=resultStatus,proto3,enum=gateway.control.v1.DiscoveryResultStatus" json:"result_status,omitempty"`
-	ErrorDetail   string                 `protobuf:"bytes,7,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	NodeId            string                 `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Cluster           string                 `protobuf:"bytes,2,opt,name=cluster,proto3" json:"cluster,omitempty"`
+	Version           string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	Nonce             string                 `protobuf:"bytes,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Subscriptions     []string               `protobuf:"bytes,5,rep,name=subscriptions,proto3" json:"subscriptions,omitempty"`
+	ResultStatus      DiscoveryResultStatus  `protobuf:"varint,6,opt,name=result_status,json=resultStatus,proto3,enum=gateway.control.v1.DiscoveryResultStatus" json:"result_status,omitempty"`
+	ErrorDetail       string                 `protobuf:"bytes,7,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	SupportedFeatures []string               `protobuf:"bytes,8,rep,name=supported_features,json=supportedFeatures,proto3" json:"supported_features,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *DiscoveryRequest) Reset() {
@@ -585,6 +586,13 @@ func (x *DiscoveryRequest) GetErrorDetail() string {
 		return x.ErrorDetail
 	}
 	return ""
+}
+
+func (x *DiscoveryRequest) GetSupportedFeatures() []string {
+	if x != nil {
+		return x.SupportedFeatures
+	}
+	return nil
 }
 
 type DiscoveryResponse struct {
@@ -768,18 +776,20 @@ func (x *StatusAck) GetAccepted() bool {
 }
 
 type ConfigSnapshot struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	GeneratedAt   *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
-	Listeners     []*Listener            `protobuf:"bytes,3,rep,name=listeners,proto3" json:"listeners,omitempty"`
-	HttpRoutes    []*HttpRoute           `protobuf:"bytes,4,rep,name=http_routes,json=httpRoutes,proto3" json:"http_routes,omitempty"`
-	GrpcRoutes    []*GrpcRoute           `protobuf:"bytes,5,rep,name=grpc_routes,json=grpcRoutes,proto3" json:"grpc_routes,omitempty"`
-	StreamRoutes  []*StreamRoute         `protobuf:"bytes,6,rep,name=stream_routes,json=streamRoutes,proto3" json:"stream_routes,omitempty"`
-	Backends      []*BackendCluster      `protobuf:"bytes,7,rep,name=backends,proto3" json:"backends,omitempty"`
-	Secrets       []*SecretMaterial      `protobuf:"bytes,8,rep,name=secrets,proto3" json:"secrets,omitempty"`
-	Extensions    *structpb.Struct       `protobuf:"bytes,9,opt,name=extensions,proto3" json:"extensions,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	Id                   string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	GeneratedAt          *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	Listeners            []*Listener            `protobuf:"bytes,3,rep,name=listeners,proto3" json:"listeners,omitempty"`
+	HttpRoutes           []*HttpRoute           `protobuf:"bytes,4,rep,name=http_routes,json=httpRoutes,proto3" json:"http_routes,omitempty"`
+	GrpcRoutes           []*GrpcRoute           `protobuf:"bytes,5,rep,name=grpc_routes,json=grpcRoutes,proto3" json:"grpc_routes,omitempty"`
+	StreamRoutes         []*StreamRoute         `protobuf:"bytes,6,rep,name=stream_routes,json=streamRoutes,proto3" json:"stream_routes,omitempty"`
+	Backends             []*BackendCluster      `protobuf:"bytes,7,rep,name=backends,proto3" json:"backends,omitempty"`
+	Secrets              []*SecretMaterial      `protobuf:"bytes,8,rep,name=secrets,proto3" json:"secrets,omitempty"`
+	Extensions           *structpb.Struct       `protobuf:"bytes,9,opt,name=extensions,proto3" json:"extensions,omitempty"`
+	RequiredFeatures     []string               `protobuf:"bytes,10,rep,name=required_features,json=requiredFeatures,proto3" json:"required_features,omitempty"`
+	CompatibilityProfile string                 `protobuf:"bytes,11,opt,name=compatibility_profile,json=compatibilityProfile,proto3" json:"compatibility_profile,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *ConfigSnapshot) Reset() {
@@ -873,6 +883,20 @@ func (x *ConfigSnapshot) GetExtensions() *structpb.Struct {
 		return x.Extensions
 	}
 	return nil
+}
+
+func (x *ConfigSnapshot) GetRequiredFeatures() []string {
+	if x != nil {
+		return x.RequiredFeatures
+	}
+	return nil
+}
+
+func (x *ConfigSnapshot) GetCompatibilityProfile() string {
+	if x != nil {
+		return x.CompatibilityProfile
+	}
+	return ""
 }
 
 type Listener struct {
@@ -3375,7 +3399,7 @@ var File_gateway_control_v1_control_proto protoreflect.FileDescriptor
 
 const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\n" +
-	" gateway/control/v1/control.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8e\x02\n" +
+	" gateway/control/v1/control.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbd\x02\n" +
 	"\x10DiscoveryRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x18\n" +
 	"\acluster\x18\x02 \x01(\tR\acluster\x12\x18\n" +
@@ -3383,7 +3407,8 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\x05nonce\x18\x04 \x01(\tR\x05nonce\x12$\n" +
 	"\rsubscriptions\x18\x05 \x03(\tR\rsubscriptions\x12N\n" +
 	"\rresult_status\x18\x06 \x01(\x0e2).gateway.control.v1.DiscoveryResultStatusR\fresultStatus\x12!\n" +
-	"\ferror_detail\x18\a \x01(\tR\verrorDetail\"\x83\x01\n" +
+	"\ferror_detail\x18\a \x01(\tR\verrorDetail\x12-\n" +
+	"\x12supported_features\x18\b \x03(\tR\x11supportedFeatures\"\x83\x01\n" +
 	"\x11DiscoveryResponse\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12\x14\n" +
 	"\x05nonce\x18\x02 \x01(\tR\x05nonce\x12>\n" +
@@ -3396,7 +3421,7 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\vobserved_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"observedAt\"'\n" +
 	"\tStatusAck\x12\x1a\n" +
-	"\baccepted\x18\x01 \x01(\bR\baccepted\"\x98\x04\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\"\xfa\x04\n" +
 	"\x0eConfigSnapshot\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12=\n" +
 	"\fgenerated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt\x12:\n" +
@@ -3410,7 +3435,10 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\asecrets\x18\b \x03(\v2\".gateway.control.v1.SecretMaterialR\asecrets\x127\n" +
 	"\n" +
 	"extensions\x18\t \x01(\v2\x17.google.protobuf.StructR\n" +
-	"extensions\"\xf0\x03\n" +
+	"extensions\x12+\n" +
+	"\x11required_features\x18\n" +
+	" \x03(\tR\x10requiredFeatures\x123\n" +
+	"\x15compatibility_profile\x18\v \x01(\tR\x14compatibilityProfile\"\xf0\x03\n" +
 	"\bListener\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aaddress\x18\x02 \x01(\tR\aaddress\x12\x12\n" +

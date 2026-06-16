@@ -27,6 +27,7 @@ message DiscoveryRequest {
   repeated string subscriptions = 5;
   DiscoveryResultStatus result_status = 6;
   string error_detail = 7;
+  repeated string supported_features = 8;
 }
 
 message DiscoveryResponse {
@@ -57,6 +58,8 @@ message ConfigSnapshot {
   repeated BackendCluster backends = 7;
   repeated SecretMaterial secrets = 8;
   google.protobuf.Struct extensions = 9;
+  repeated string required_features = 10;
+  string compatibility_profile = 11;
 }
 
 enum ListenerProtocol {
