@@ -589,6 +589,17 @@ message BackendCluster {
   TokenPolicyConfig token_policy = 12;
   // WebAssembly plugin configuration attached to this backend.
   WasmPluginConfig wasm_plugin = 13;
+  // Per-backend circuit breaker configuration.
+  CircuitBreakerConfig circuit_breaker = 14;
+}
+
+// CircuitBreakerConfig defines per-backend circuit breaker thresholds.
+// When not set, the data plane uses its default circuit breaker settings.
+message CircuitBreakerConfig {
+  // Maximum number of concurrent inflight requests allowed to this backend.
+  // Requests beyond this limit are rejected immediately with a 503.
+  // Set to 0 to disable circuit breaking for this backend.
+  uint32 max_inflight_requests = 1;
 }
 
 // BackendEndpoint represents a single backend instance discovered by the control plane.
