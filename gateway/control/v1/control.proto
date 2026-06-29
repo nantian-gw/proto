@@ -23,6 +23,7 @@ option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
 import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 // ConfigurationDiscoveryService is the core xDS control-plane API.
 // Data-plane instances use this service to receive configuration
@@ -300,6 +301,9 @@ message HttpRoute {
   map<string, string> labels = 6;
   // Kubernetes annotations from the route resource.
   map<string, string> annotations = 7;
+  // Per-route policy overrides for timeout, body size, proxy buffering,
+  // and connection keepalive settings.
+  RoutePolicy route_policy = 8;
 }
 
 // HttpRule defines a single HTTP routing rule: match conditions, filters
@@ -453,6 +457,9 @@ message GrpcRoute {
   map<string, string> labels = 6;
   // Kubernetes annotations from the route resource.
   map<string, string> annotations = 7;
+  // Per-route policy overrides for timeout, body size, proxy buffering,
+  // and connection keepalive settings.
+  RoutePolicy route_policy = 8;
 }
 
 // GrpcRule defines a single gRPC routing rule: service/method matching,
@@ -558,6 +565,43 @@ message BackendRef {
   map<string, string> metadata = 7;
   // Per-backend filters applied only to traffic forwarded to this backend.
   repeated Filter filters = 8;
+}
+
+// RoutePolicy provides per-route overrides for timeout, body size,
+// proxy buffering, and connection keepalive settings.
+message RoutePolicy {
+  RoutePolicyTimeout timeout = 1;
+  RoutePolicyBodyLimit body_limit = 2;
+  RoutePolicyProxy proxy = 3;
+  RoutePolicyConnection connection = 4;
+}
+
+message RoutePolicyTimeout {
+  google.protobuf.Duration request = 1;
+  google.protobuf.Duration backend_request = 2;
+  google.protobuf.Duration connect = 3;
+  google.protobuf.Duration next_upstream = 4;
+}
+
+message RoutePolicyBodyLimit {
+  uint64 max_request_body_bytes = 1;
+  uint64 request_body_buffer_bytes = 2;
+  uint64 max_request_header_bytes = 3;
+}
+
+message RoutePolicyProxy {
+  google.protobuf.BoolValue request_buffering = 1;
+  google.protobuf.BoolValue response_buffering = 2;
+  uint64 buffer_size = 3;
+  uint32 buffer_count = 4;
+}
+
+message RoutePolicyConnection {
+  uint32 keepalive_requests = 1;
+  google.protobuf.Duration keepalive_time = 2;
+  google.protobuf.Duration keepalive_timeout = 3;
+  uint32 upstream_keepalive_pool_size = 4;
+  google.protobuf.Duration upstream_keepalive_idle = 5;
 }
 
 // BackendCluster represents a discovered upstream service with its endpoints,

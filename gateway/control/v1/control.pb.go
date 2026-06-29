@@ -28,6 +28,7 @@ import (
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	wrapperspb "google.golang.org/protobuf/types/known/wrapperspb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -1505,7 +1506,10 @@ type HttpRoute struct {
 	// Kubernetes labels from the route resource.
 	Labels map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Kubernetes annotations from the route resource.
-	Annotations   map[string]string `protobuf:"bytes,7,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Annotations map[string]string `protobuf:"bytes,7,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Per-route policy overrides for timeout, body size, proxy buffering,
+	// and connection keepalive settings.
+	RoutePolicy   *RoutePolicy `protobuf:"bytes,8,opt,name=route_policy,json=routePolicy,proto3" json:"route_policy,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1585,6 +1589,13 @@ func (x *HttpRoute) GetLabels() map[string]string {
 func (x *HttpRoute) GetAnnotations() map[string]string {
 	if x != nil {
 		return x.Annotations
+	}
+	return nil
+}
+
+func (x *HttpRoute) GetRoutePolicy() *RoutePolicy {
+	if x != nil {
+		return x.RoutePolicy
 	}
 	return nil
 }
@@ -2151,7 +2162,10 @@ type GrpcRoute struct {
 	// Kubernetes labels from the route resource.
 	Labels map[string]string `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Kubernetes annotations from the route resource.
-	Annotations   map[string]string `protobuf:"bytes,7,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Annotations map[string]string `protobuf:"bytes,7,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Per-route policy overrides for timeout, body size, proxy buffering,
+	// and connection keepalive settings.
+	RoutePolicy   *RoutePolicy `protobuf:"bytes,8,opt,name=route_policy,json=routePolicy,proto3" json:"route_policy,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2231,6 +2245,13 @@ func (x *GrpcRoute) GetLabels() map[string]string {
 func (x *GrpcRoute) GetAnnotations() map[string]string {
 	if x != nil {
 		return x.Annotations
+	}
+	return nil
+}
+
+func (x *GrpcRoute) GetRoutePolicy() *RoutePolicy {
+	if x != nil {
+		return x.RoutePolicy
 	}
 	return nil
 }
@@ -2823,6 +2844,348 @@ func (x *BackendRef) GetFilters() []*Filter {
 	return nil
 }
 
+// RoutePolicy provides per-route overrides for timeout, body size,
+// proxy buffering, and connection keepalive settings.
+type RoutePolicy struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Timeout       *RoutePolicyTimeout    `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	BodyLimit     *RoutePolicyBodyLimit  `protobuf:"bytes,2,opt,name=body_limit,json=bodyLimit,proto3" json:"body_limit,omitempty"`
+	Proxy         *RoutePolicyProxy      `protobuf:"bytes,3,opt,name=proxy,proto3" json:"proxy,omitempty"`
+	Connection    *RoutePolicyConnection `protobuf:"bytes,4,opt,name=connection,proto3" json:"connection,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RoutePolicy) Reset() {
+	*x = RoutePolicy{}
+	mi := &file_gateway_control_v1_control_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutePolicy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutePolicy) ProtoMessage() {}
+
+func (x *RoutePolicy) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_control_v1_control_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutePolicy.ProtoReflect.Descriptor instead.
+func (*RoutePolicy) Descriptor() ([]byte, []int) {
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *RoutePolicy) GetTimeout() *RoutePolicyTimeout {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
+func (x *RoutePolicy) GetBodyLimit() *RoutePolicyBodyLimit {
+	if x != nil {
+		return x.BodyLimit
+	}
+	return nil
+}
+
+func (x *RoutePolicy) GetProxy() *RoutePolicyProxy {
+	if x != nil {
+		return x.Proxy
+	}
+	return nil
+}
+
+func (x *RoutePolicy) GetConnection() *RoutePolicyConnection {
+	if x != nil {
+		return x.Connection
+	}
+	return nil
+}
+
+type RoutePolicyTimeout struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Request        *durationpb.Duration   `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
+	BackendRequest *durationpb.Duration   `protobuf:"bytes,2,opt,name=backend_request,json=backendRequest,proto3" json:"backend_request,omitempty"`
+	Connect        *durationpb.Duration   `protobuf:"bytes,3,opt,name=connect,proto3" json:"connect,omitempty"`
+	NextUpstream   *durationpb.Duration   `protobuf:"bytes,4,opt,name=next_upstream,json=nextUpstream,proto3" json:"next_upstream,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RoutePolicyTimeout) Reset() {
+	*x = RoutePolicyTimeout{}
+	mi := &file_gateway_control_v1_control_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutePolicyTimeout) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutePolicyTimeout) ProtoMessage() {}
+
+func (x *RoutePolicyTimeout) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_control_v1_control_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutePolicyTimeout.ProtoReflect.Descriptor instead.
+func (*RoutePolicyTimeout) Descriptor() ([]byte, []int) {
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *RoutePolicyTimeout) GetRequest() *durationpb.Duration {
+	if x != nil {
+		return x.Request
+	}
+	return nil
+}
+
+func (x *RoutePolicyTimeout) GetBackendRequest() *durationpb.Duration {
+	if x != nil {
+		return x.BackendRequest
+	}
+	return nil
+}
+
+func (x *RoutePolicyTimeout) GetConnect() *durationpb.Duration {
+	if x != nil {
+		return x.Connect
+	}
+	return nil
+}
+
+func (x *RoutePolicyTimeout) GetNextUpstream() *durationpb.Duration {
+	if x != nil {
+		return x.NextUpstream
+	}
+	return nil
+}
+
+type RoutePolicyBodyLimit struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	MaxRequestBodyBytes    uint64                 `protobuf:"varint,1,opt,name=max_request_body_bytes,json=maxRequestBodyBytes,proto3" json:"max_request_body_bytes,omitempty"`
+	RequestBodyBufferBytes uint64                 `protobuf:"varint,2,opt,name=request_body_buffer_bytes,json=requestBodyBufferBytes,proto3" json:"request_body_buffer_bytes,omitempty"`
+	MaxRequestHeaderBytes  uint64                 `protobuf:"varint,3,opt,name=max_request_header_bytes,json=maxRequestHeaderBytes,proto3" json:"max_request_header_bytes,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *RoutePolicyBodyLimit) Reset() {
+	*x = RoutePolicyBodyLimit{}
+	mi := &file_gateway_control_v1_control_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutePolicyBodyLimit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutePolicyBodyLimit) ProtoMessage() {}
+
+func (x *RoutePolicyBodyLimit) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_control_v1_control_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutePolicyBodyLimit.ProtoReflect.Descriptor instead.
+func (*RoutePolicyBodyLimit) Descriptor() ([]byte, []int) {
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *RoutePolicyBodyLimit) GetMaxRequestBodyBytes() uint64 {
+	if x != nil {
+		return x.MaxRequestBodyBytes
+	}
+	return 0
+}
+
+func (x *RoutePolicyBodyLimit) GetRequestBodyBufferBytes() uint64 {
+	if x != nil {
+		return x.RequestBodyBufferBytes
+	}
+	return 0
+}
+
+func (x *RoutePolicyBodyLimit) GetMaxRequestHeaderBytes() uint64 {
+	if x != nil {
+		return x.MaxRequestHeaderBytes
+	}
+	return 0
+}
+
+type RoutePolicyProxy struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	RequestBuffering  *wrapperspb.BoolValue  `protobuf:"bytes,1,opt,name=request_buffering,json=requestBuffering,proto3" json:"request_buffering,omitempty"`
+	ResponseBuffering *wrapperspb.BoolValue  `protobuf:"bytes,2,opt,name=response_buffering,json=responseBuffering,proto3" json:"response_buffering,omitempty"`
+	BufferSize        uint64                 `protobuf:"varint,3,opt,name=buffer_size,json=bufferSize,proto3" json:"buffer_size,omitempty"`
+	BufferCount       uint32                 `protobuf:"varint,4,opt,name=buffer_count,json=bufferCount,proto3" json:"buffer_count,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *RoutePolicyProxy) Reset() {
+	*x = RoutePolicyProxy{}
+	mi := &file_gateway_control_v1_control_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutePolicyProxy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutePolicyProxy) ProtoMessage() {}
+
+func (x *RoutePolicyProxy) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_control_v1_control_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutePolicyProxy.ProtoReflect.Descriptor instead.
+func (*RoutePolicyProxy) Descriptor() ([]byte, []int) {
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *RoutePolicyProxy) GetRequestBuffering() *wrapperspb.BoolValue {
+	if x != nil {
+		return x.RequestBuffering
+	}
+	return nil
+}
+
+func (x *RoutePolicyProxy) GetResponseBuffering() *wrapperspb.BoolValue {
+	if x != nil {
+		return x.ResponseBuffering
+	}
+	return nil
+}
+
+func (x *RoutePolicyProxy) GetBufferSize() uint64 {
+	if x != nil {
+		return x.BufferSize
+	}
+	return 0
+}
+
+func (x *RoutePolicyProxy) GetBufferCount() uint32 {
+	if x != nil {
+		return x.BufferCount
+	}
+	return 0
+}
+
+type RoutePolicyConnection struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	KeepaliveRequests         uint32                 `protobuf:"varint,1,opt,name=keepalive_requests,json=keepaliveRequests,proto3" json:"keepalive_requests,omitempty"`
+	KeepaliveTime             *durationpb.Duration   `protobuf:"bytes,2,opt,name=keepalive_time,json=keepaliveTime,proto3" json:"keepalive_time,omitempty"`
+	KeepaliveTimeout          *durationpb.Duration   `protobuf:"bytes,3,opt,name=keepalive_timeout,json=keepaliveTimeout,proto3" json:"keepalive_timeout,omitempty"`
+	UpstreamKeepalivePoolSize uint32                 `protobuf:"varint,4,opt,name=upstream_keepalive_pool_size,json=upstreamKeepalivePoolSize,proto3" json:"upstream_keepalive_pool_size,omitempty"`
+	UpstreamKeepaliveIdle     *durationpb.Duration   `protobuf:"bytes,5,opt,name=upstream_keepalive_idle,json=upstreamKeepaliveIdle,proto3" json:"upstream_keepalive_idle,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *RoutePolicyConnection) Reset() {
+	*x = RoutePolicyConnection{}
+	mi := &file_gateway_control_v1_control_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutePolicyConnection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutePolicyConnection) ProtoMessage() {}
+
+func (x *RoutePolicyConnection) ProtoReflect() protoreflect.Message {
+	mi := &file_gateway_control_v1_control_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutePolicyConnection.ProtoReflect.Descriptor instead.
+func (*RoutePolicyConnection) Descriptor() ([]byte, []int) {
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *RoutePolicyConnection) GetKeepaliveRequests() uint32 {
+	if x != nil {
+		return x.KeepaliveRequests
+	}
+	return 0
+}
+
+func (x *RoutePolicyConnection) GetKeepaliveTime() *durationpb.Duration {
+	if x != nil {
+		return x.KeepaliveTime
+	}
+	return nil
+}
+
+func (x *RoutePolicyConnection) GetKeepaliveTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.KeepaliveTimeout
+	}
+	return nil
+}
+
+func (x *RoutePolicyConnection) GetUpstreamKeepalivePoolSize() uint32 {
+	if x != nil {
+		return x.UpstreamKeepalivePoolSize
+	}
+	return 0
+}
+
+func (x *RoutePolicyConnection) GetUpstreamKeepaliveIdle() *durationpb.Duration {
+	if x != nil {
+		return x.UpstreamKeepaliveIdle
+	}
+	return nil
+}
+
 // BackendCluster represents a discovered upstream service with its endpoints,
 // timeouts, TLS settings, and optional AI/Token/Wasm plugin configuration.
 type BackendCluster struct {
@@ -2861,7 +3224,7 @@ type BackendCluster struct {
 
 func (x *BackendCluster) Reset() {
 	*x = BackendCluster{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[28]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2873,7 +3236,7 @@ func (x *BackendCluster) String() string {
 func (*BackendCluster) ProtoMessage() {}
 
 func (x *BackendCluster) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[28]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2886,7 +3249,7 @@ func (x *BackendCluster) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackendCluster.ProtoReflect.Descriptor instead.
 func (*BackendCluster) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{28}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *BackendCluster) GetName() string {
@@ -3001,7 +3364,7 @@ type CircuitBreakerConfig struct {
 
 func (x *CircuitBreakerConfig) Reset() {
 	*x = CircuitBreakerConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[29]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3013,7 +3376,7 @@ func (x *CircuitBreakerConfig) String() string {
 func (*CircuitBreakerConfig) ProtoMessage() {}
 
 func (x *CircuitBreakerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[29]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3026,7 +3389,7 @@ func (x *CircuitBreakerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CircuitBreakerConfig.ProtoReflect.Descriptor instead.
 func (*CircuitBreakerConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{29}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *CircuitBreakerConfig) GetMaxInflightRequests() uint32 {
@@ -3053,7 +3416,7 @@ type BackendEndpoint struct {
 
 func (x *BackendEndpoint) Reset() {
 	*x = BackendEndpoint{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[30]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3065,7 +3428,7 @@ func (x *BackendEndpoint) String() string {
 func (*BackendEndpoint) ProtoMessage() {}
 
 func (x *BackendEndpoint) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[30]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3078,7 +3441,7 @@ func (x *BackendEndpoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackendEndpoint.ProtoReflect.Descriptor instead.
 func (*BackendEndpoint) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{30}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *BackendEndpoint) GetAddress() string {
@@ -3124,7 +3487,7 @@ type HeaderMatch struct {
 
 func (x *HeaderMatch) Reset() {
 	*x = HeaderMatch{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[31]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3136,7 +3499,7 @@ func (x *HeaderMatch) String() string {
 func (*HeaderMatch) ProtoMessage() {}
 
 func (x *HeaderMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[31]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3149,7 +3512,7 @@ func (x *HeaderMatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeaderMatch.ProtoReflect.Descriptor instead.
 func (*HeaderMatch) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{31}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *HeaderMatch) GetName() string {
@@ -3188,7 +3551,7 @@ type QueryMatch struct {
 
 func (x *QueryMatch) Reset() {
 	*x = QueryMatch{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[32]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3200,7 +3563,7 @@ func (x *QueryMatch) String() string {
 func (*QueryMatch) ProtoMessage() {}
 
 func (x *QueryMatch) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[32]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3213,7 +3576,7 @@ func (x *QueryMatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryMatch.ProtoReflect.Descriptor instead.
 func (*QueryMatch) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{32}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *QueryMatch) GetName() string {
@@ -3251,7 +3614,7 @@ type Filter struct {
 
 func (x *Filter) Reset() {
 	*x = Filter{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[33]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3263,7 +3626,7 @@ func (x *Filter) String() string {
 func (*Filter) ProtoMessage() {}
 
 func (x *Filter) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[33]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3276,7 +3639,7 @@ func (x *Filter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Filter.ProtoReflect.Descriptor instead.
 func (*Filter) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{33}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *Filter) GetType() string {
@@ -3311,7 +3674,7 @@ type SecretMaterial struct {
 
 func (x *SecretMaterial) Reset() {
 	*x = SecretMaterial{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[34]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3323,7 +3686,7 @@ func (x *SecretMaterial) String() string {
 func (*SecretMaterial) ProtoMessage() {}
 
 func (x *SecretMaterial) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[34]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3336,7 +3699,7 @@ func (x *SecretMaterial) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SecretMaterial.ProtoReflect.Descriptor instead.
 func (*SecretMaterial) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{34}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *SecretMaterial) GetNamespace() string {
@@ -3388,7 +3751,7 @@ type AIServiceConfig struct {
 
 func (x *AIServiceConfig) Reset() {
 	*x = AIServiceConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[35]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3400,7 +3763,7 @@ func (x *AIServiceConfig) String() string {
 func (*AIServiceConfig) ProtoMessage() {}
 
 func (x *AIServiceConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[35]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3413,7 +3776,7 @@ func (x *AIServiceConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AIServiceConfig.ProtoReflect.Descriptor instead.
 func (*AIServiceConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{35}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *AIServiceConfig) GetProvider() string {
@@ -3466,7 +3829,7 @@ type AIServiceAuthConfig struct {
 
 func (x *AIServiceAuthConfig) Reset() {
 	*x = AIServiceAuthConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[36]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3478,7 +3841,7 @@ func (x *AIServiceAuthConfig) String() string {
 func (*AIServiceAuthConfig) ProtoMessage() {}
 
 func (x *AIServiceAuthConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[36]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3491,7 +3854,7 @@ func (x *AIServiceAuthConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AIServiceAuthConfig.ProtoReflect.Descriptor instead.
 func (*AIServiceAuthConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{36}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *AIServiceAuthConfig) GetType() string {
@@ -3536,7 +3899,7 @@ type TokenPolicyConfig struct {
 
 func (x *TokenPolicyConfig) Reset() {
 	*x = TokenPolicyConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[37]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3548,7 +3911,7 @@ func (x *TokenPolicyConfig) String() string {
 func (*TokenPolicyConfig) ProtoMessage() {}
 
 func (x *TokenPolicyConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[37]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3561,7 +3924,7 @@ func (x *TokenPolicyConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TokenPolicyConfig.ProtoReflect.Descriptor instead.
 func (*TokenPolicyConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{37}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *TokenPolicyConfig) GetTokensPerMinute() uint64 {
@@ -3631,7 +3994,7 @@ type WasmPluginConfig struct {
 
 func (x *WasmPluginConfig) Reset() {
 	*x = WasmPluginConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[38]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3643,7 +4006,7 @@ func (x *WasmPluginConfig) String() string {
 func (*WasmPluginConfig) ProtoMessage() {}
 
 func (x *WasmPluginConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[38]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3656,7 +4019,7 @@ func (x *WasmPluginConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WasmPluginConfig.ProtoReflect.Descriptor instead.
 func (*WasmPluginConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{38}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *WasmPluginConfig) GetName() string {
@@ -3726,7 +4089,7 @@ type WasmSandboxConfig struct {
 
 func (x *WasmSandboxConfig) Reset() {
 	*x = WasmSandboxConfig{}
-	mi := &file_gateway_control_v1_control_proto_msgTypes[39]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3738,7 +4101,7 @@ func (x *WasmSandboxConfig) String() string {
 func (*WasmSandboxConfig) ProtoMessage() {}
 
 func (x *WasmSandboxConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_gateway_control_v1_control_proto_msgTypes[39]
+	mi := &file_gateway_control_v1_control_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3751,7 +4114,7 @@ func (x *WasmSandboxConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WasmSandboxConfig.ProtoReflect.Descriptor instead.
 func (*WasmSandboxConfig) Descriptor() ([]byte, []int) {
-	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{39}
+	return file_gateway_control_v1_control_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *WasmSandboxConfig) GetMaxMemoryBytes() uint64 {
@@ -3786,7 +4149,7 @@ var File_gateway_control_v1_control_proto protoreflect.FileDescriptor
 
 const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\n" +
-	" gateway/control/v1/control.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xbd\x02\n" +
+	" gateway/control/v1/control.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1egoogle/protobuf/wrappers.proto\"\xbd\x02\n" +
 	"\x10DiscoveryRequest\x12\x17\n" +
 	"\anode_id\x18\x01 \x01(\tR\x06nodeId\x12\x18\n" +
 	"\acluster\x18\x02 \x01(\tR\acluster\x12\x18\n" +
@@ -3869,7 +4232,7 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"maxVersion\"v\n" +
 	"\x18BackendTlsSubjectAltName\x12D\n" +
 	"\x04type\x18\x01 \x01(\x0e20.gateway.control.v1.BackendTlsSubjectAltNameTypeR\x04type\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value\"\xdf\x03\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value\"\xa3\x04\n" +
 	"\tHttpRoute\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12\x1c\n" +
@@ -3878,7 +4241,8 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"parentRefs\x122\n" +
 	"\x05rules\x18\x05 \x03(\v2\x1c.gateway.control.v1.HttpRuleR\x05rules\x12A\n" +
 	"\x06labels\x18\x06 \x03(\v2).gateway.control.v1.HttpRoute.LabelsEntryR\x06labels\x12P\n" +
-	"\vannotations\x18\a \x03(\v2..gateway.control.v1.HttpRoute.AnnotationsEntryR\vannotations\x1a9\n" +
+	"\vannotations\x18\a \x03(\v2..gateway.control.v1.HttpRoute.AnnotationsEntryR\vannotations\x12B\n" +
+	"\froute_policy\x18\b \x01(\v2\x1f.gateway.control.v1.RoutePolicyR\vroutePolicy\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a>\n" +
@@ -3920,7 +4284,7 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"headerName\"\xa9\x01\n" +
 	"\x13LoadBalancingPolicy\x12?\n" +
 	"\x04type\x18\x01 \x01(\x0e2+.gateway.control.v1.LoadBalancingPolicyTypeR\x04type\x12Q\n" +
-	"\x0fconsistent_hash\x18\x02 \x01(\v2(.gateway.control.v1.ConsistentHashPolicyR\x0econsistentHash\"\xdf\x03\n" +
+	"\x0fconsistent_hash\x18\x02 \x01(\v2(.gateway.control.v1.ConsistentHashPolicyR\x0econsistentHash\"\xa3\x04\n" +
 	"\tGrpcRoute\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12\x1c\n" +
@@ -3929,7 +4293,8 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"parentRefs\x122\n" +
 	"\x05rules\x18\x05 \x03(\v2\x1c.gateway.control.v1.GrpcRuleR\x05rules\x12A\n" +
 	"\x06labels\x18\x06 \x03(\v2).gateway.control.v1.GrpcRoute.LabelsEntryR\x06labels\x12P\n" +
-	"\vannotations\x18\a \x03(\v2..gateway.control.v1.GrpcRoute.AnnotationsEntryR\vannotations\x1a9\n" +
+	"\vannotations\x18\a \x03(\v2..gateway.control.v1.GrpcRoute.AnnotationsEntryR\vannotations\x12B\n" +
+	"\froute_policy\x18\b \x01(\v2\x1f.gateway.control.v1.RoutePolicyR\vroutePolicy\x1a9\n" +
 	"\vLabelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a>\n" +
@@ -3991,7 +4356,36 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\afilters\x18\b \x03(\v2\x1a.gateway.control.v1.FilterR\afilters\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xd6\a\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x9f\x02\n" +
+	"\vRoutePolicy\x12@\n" +
+	"\atimeout\x18\x01 \x01(\v2&.gateway.control.v1.RoutePolicyTimeoutR\atimeout\x12G\n" +
+	"\n" +
+	"body_limit\x18\x02 \x01(\v2(.gateway.control.v1.RoutePolicyBodyLimitR\tbodyLimit\x12:\n" +
+	"\x05proxy\x18\x03 \x01(\v2$.gateway.control.v1.RoutePolicyProxyR\x05proxy\x12I\n" +
+	"\n" +
+	"connection\x18\x04 \x01(\v2).gateway.control.v1.RoutePolicyConnectionR\n" +
+	"connection\"\x82\x02\n" +
+	"\x12RoutePolicyTimeout\x123\n" +
+	"\arequest\x18\x01 \x01(\v2\x19.google.protobuf.DurationR\arequest\x12B\n" +
+	"\x0fbackend_request\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\x0ebackendRequest\x123\n" +
+	"\aconnect\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\aconnect\x12>\n" +
+	"\rnext_upstream\x18\x04 \x01(\v2\x19.google.protobuf.DurationR\fnextUpstream\"\xbf\x01\n" +
+	"\x14RoutePolicyBodyLimit\x123\n" +
+	"\x16max_request_body_bytes\x18\x01 \x01(\x04R\x13maxRequestBodyBytes\x129\n" +
+	"\x19request_body_buffer_bytes\x18\x02 \x01(\x04R\x16requestBodyBufferBytes\x127\n" +
+	"\x18max_request_header_bytes\x18\x03 \x01(\x04R\x15maxRequestHeaderBytes\"\xea\x01\n" +
+	"\x10RoutePolicyProxy\x12G\n" +
+	"\x11request_buffering\x18\x01 \x01(\v2\x1a.google.protobuf.BoolValueR\x10requestBuffering\x12I\n" +
+	"\x12response_buffering\x18\x02 \x01(\v2\x1a.google.protobuf.BoolValueR\x11responseBuffering\x12\x1f\n" +
+	"\vbuffer_size\x18\x03 \x01(\x04R\n" +
+	"bufferSize\x12!\n" +
+	"\fbuffer_count\x18\x04 \x01(\rR\vbufferCount\"\xe4\x02\n" +
+	"\x15RoutePolicyConnection\x12-\n" +
+	"\x12keepalive_requests\x18\x01 \x01(\rR\x11keepaliveRequests\x12@\n" +
+	"\x0ekeepalive_time\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\rkeepaliveTime\x12F\n" +
+	"\x11keepalive_timeout\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\x10keepaliveTimeout\x12?\n" +
+	"\x1cupstream_keepalive_pool_size\x18\x04 \x01(\rR\x19upstreamKeepalivePoolSize\x12Q\n" +
+	"\x17upstream_keepalive_idle\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\x15upstreamKeepaliveIdle\"\xd6\a\n" +
 	"\x0eBackendCluster\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12\x1a\n" +
@@ -4135,7 +4529,7 @@ func file_gateway_control_v1_control_proto_rawDescGZIP() []byte {
 }
 
 var file_gateway_control_v1_control_proto_enumTypes = make([]protoimpl.EnumInfo, 9)
-var file_gateway_control_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
+var file_gateway_control_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 54)
 var file_gateway_control_v1_control_proto_goTypes = []any{
 	(DiscoveryResultStatus)(0),        // 0: gateway.control.v1.DiscoveryResultStatus
 	(ListenerProtocol)(0),             // 1: gateway.control.v1.ListenerProtocol
@@ -4174,116 +4568,137 @@ var file_gateway_control_v1_control_proto_goTypes = []any{
 	(*StreamMatch)(nil),               // 34: gateway.control.v1.StreamMatch
 	(*ParentRef)(nil),                 // 35: gateway.control.v1.ParentRef
 	(*BackendRef)(nil),                // 36: gateway.control.v1.BackendRef
-	(*BackendCluster)(nil),            // 37: gateway.control.v1.BackendCluster
-	(*CircuitBreakerConfig)(nil),      // 38: gateway.control.v1.CircuitBreakerConfig
-	(*BackendEndpoint)(nil),           // 39: gateway.control.v1.BackendEndpoint
-	(*HeaderMatch)(nil),               // 40: gateway.control.v1.HeaderMatch
-	(*QueryMatch)(nil),                // 41: gateway.control.v1.QueryMatch
-	(*Filter)(nil),                    // 42: gateway.control.v1.Filter
-	(*SecretMaterial)(nil),            // 43: gateway.control.v1.SecretMaterial
-	(*AIServiceConfig)(nil),           // 44: gateway.control.v1.AIServiceConfig
-	(*AIServiceAuthConfig)(nil),       // 45: gateway.control.v1.AIServiceAuthConfig
-	(*TokenPolicyConfig)(nil),         // 46: gateway.control.v1.TokenPolicyConfig
-	(*WasmPluginConfig)(nil),          // 47: gateway.control.v1.WasmPluginConfig
-	(*WasmSandboxConfig)(nil),         // 48: gateway.control.v1.WasmSandboxConfig
-	nil,                               // 49: gateway.control.v1.Listener.MetadataEntry
-	nil,                               // 50: gateway.control.v1.HttpRoute.LabelsEntry
-	nil,                               // 51: gateway.control.v1.HttpRoute.AnnotationsEntry
-	nil,                               // 52: gateway.control.v1.GrpcRoute.LabelsEntry
-	nil,                               // 53: gateway.control.v1.GrpcRoute.AnnotationsEntry
-	nil,                               // 54: gateway.control.v1.StreamRoute.LabelsEntry
-	nil,                               // 55: gateway.control.v1.StreamRoute.AnnotationsEntry
-	nil,                               // 56: gateway.control.v1.BackendRef.MetadataEntry
-	nil,                               // 57: gateway.control.v1.BackendCluster.MetadataEntry
-	(*timestamppb.Timestamp)(nil),     // 58: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),           // 59: google.protobuf.Struct
-	(*durationpb.Duration)(nil),       // 60: google.protobuf.Duration
+	(*RoutePolicy)(nil),               // 37: gateway.control.v1.RoutePolicy
+	(*RoutePolicyTimeout)(nil),        // 38: gateway.control.v1.RoutePolicyTimeout
+	(*RoutePolicyBodyLimit)(nil),      // 39: gateway.control.v1.RoutePolicyBodyLimit
+	(*RoutePolicyProxy)(nil),          // 40: gateway.control.v1.RoutePolicyProxy
+	(*RoutePolicyConnection)(nil),     // 41: gateway.control.v1.RoutePolicyConnection
+	(*BackendCluster)(nil),            // 42: gateway.control.v1.BackendCluster
+	(*CircuitBreakerConfig)(nil),      // 43: gateway.control.v1.CircuitBreakerConfig
+	(*BackendEndpoint)(nil),           // 44: gateway.control.v1.BackendEndpoint
+	(*HeaderMatch)(nil),               // 45: gateway.control.v1.HeaderMatch
+	(*QueryMatch)(nil),                // 46: gateway.control.v1.QueryMatch
+	(*Filter)(nil),                    // 47: gateway.control.v1.Filter
+	(*SecretMaterial)(nil),            // 48: gateway.control.v1.SecretMaterial
+	(*AIServiceConfig)(nil),           // 49: gateway.control.v1.AIServiceConfig
+	(*AIServiceAuthConfig)(nil),       // 50: gateway.control.v1.AIServiceAuthConfig
+	(*TokenPolicyConfig)(nil),         // 51: gateway.control.v1.TokenPolicyConfig
+	(*WasmPluginConfig)(nil),          // 52: gateway.control.v1.WasmPluginConfig
+	(*WasmSandboxConfig)(nil),         // 53: gateway.control.v1.WasmSandboxConfig
+	nil,                               // 54: gateway.control.v1.Listener.MetadataEntry
+	nil,                               // 55: gateway.control.v1.HttpRoute.LabelsEntry
+	nil,                               // 56: gateway.control.v1.HttpRoute.AnnotationsEntry
+	nil,                               // 57: gateway.control.v1.GrpcRoute.LabelsEntry
+	nil,                               // 58: gateway.control.v1.GrpcRoute.AnnotationsEntry
+	nil,                               // 59: gateway.control.v1.StreamRoute.LabelsEntry
+	nil,                               // 60: gateway.control.v1.StreamRoute.AnnotationsEntry
+	nil,                               // 61: gateway.control.v1.BackendRef.MetadataEntry
+	nil,                               // 62: gateway.control.v1.BackendCluster.MetadataEntry
+	(*timestamppb.Timestamp)(nil),     // 63: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),           // 64: google.protobuf.Struct
+	(*durationpb.Duration)(nil),       // 65: google.protobuf.Duration
+	(*wrapperspb.BoolValue)(nil),      // 66: google.protobuf.BoolValue
 }
 var file_gateway_control_v1_control_proto_depIdxs = []int32{
 	0,  // 0: gateway.control.v1.DiscoveryRequest.result_status:type_name -> gateway.control.v1.DiscoveryResultStatus
 	13, // 1: gateway.control.v1.DiscoveryResponse.snapshot:type_name -> gateway.control.v1.ConfigSnapshot
-	58, // 2: gateway.control.v1.StatusReport.observed_at:type_name -> google.protobuf.Timestamp
-	58, // 3: gateway.control.v1.ConfigSnapshot.generated_at:type_name -> google.protobuf.Timestamp
+	63, // 2: gateway.control.v1.StatusReport.observed_at:type_name -> google.protobuf.Timestamp
+	63, // 3: gateway.control.v1.ConfigSnapshot.generated_at:type_name -> google.protobuf.Timestamp
 	14, // 4: gateway.control.v1.ConfigSnapshot.listeners:type_name -> gateway.control.v1.Listener
 	20, // 5: gateway.control.v1.ConfigSnapshot.http_routes:type_name -> gateway.control.v1.HttpRoute
 	29, // 6: gateway.control.v1.ConfigSnapshot.grpc_routes:type_name -> gateway.control.v1.GrpcRoute
 	32, // 7: gateway.control.v1.ConfigSnapshot.stream_routes:type_name -> gateway.control.v1.StreamRoute
-	37, // 8: gateway.control.v1.ConfigSnapshot.backends:type_name -> gateway.control.v1.BackendCluster
-	43, // 9: gateway.control.v1.ConfigSnapshot.secrets:type_name -> gateway.control.v1.SecretMaterial
-	59, // 10: gateway.control.v1.ConfigSnapshot.extensions:type_name -> google.protobuf.Struct
+	42, // 8: gateway.control.v1.ConfigSnapshot.backends:type_name -> gateway.control.v1.BackendCluster
+	48, // 9: gateway.control.v1.ConfigSnapshot.secrets:type_name -> gateway.control.v1.SecretMaterial
+	64, // 10: gateway.control.v1.ConfigSnapshot.extensions:type_name -> google.protobuf.Struct
 	1,  // 11: gateway.control.v1.Listener.protocol:type_name -> gateway.control.v1.ListenerProtocol
 	15, // 12: gateway.control.v1.Listener.tls:type_name -> gateway.control.v1.TlsConfig
-	49, // 13: gateway.control.v1.Listener.metadata:type_name -> gateway.control.v1.Listener.MetadataEntry
+	54, // 13: gateway.control.v1.Listener.metadata:type_name -> gateway.control.v1.Listener.MetadataEntry
 	17, // 14: gateway.control.v1.Listener.backend_tls:type_name -> gateway.control.v1.BackendTlsConfig
 	16, // 15: gateway.control.v1.TlsConfig.frontend_validation:type_name -> gateway.control.v1.FrontendValidation
 	19, // 16: gateway.control.v1.BackendTlsValidation.subject_alt_names:type_name -> gateway.control.v1.BackendTlsSubjectAltName
 	4,  // 17: gateway.control.v1.BackendTlsSubjectAltName.type:type_name -> gateway.control.v1.BackendTlsSubjectAltNameType
 	35, // 18: gateway.control.v1.HttpRoute.parent_refs:type_name -> gateway.control.v1.ParentRef
 	21, // 19: gateway.control.v1.HttpRoute.rules:type_name -> gateway.control.v1.HttpRule
-	50, // 20: gateway.control.v1.HttpRoute.labels:type_name -> gateway.control.v1.HttpRoute.LabelsEntry
-	51, // 21: gateway.control.v1.HttpRoute.annotations:type_name -> gateway.control.v1.HttpRoute.AnnotationsEntry
-	22, // 22: gateway.control.v1.HttpRule.matches:type_name -> gateway.control.v1.HttpMatch
-	42, // 23: gateway.control.v1.HttpRule.filters:type_name -> gateway.control.v1.Filter
-	36, // 24: gateway.control.v1.HttpRule.backend_refs:type_name -> gateway.control.v1.BackendRef
-	23, // 25: gateway.control.v1.HttpRule.timeouts:type_name -> gateway.control.v1.HttpRouteTimeouts
-	24, // 26: gateway.control.v1.HttpRule.retry:type_name -> gateway.control.v1.HttpRouteRetry
-	26, // 27: gateway.control.v1.HttpRule.session_persistence:type_name -> gateway.control.v1.SessionPersistence
-	40, // 28: gateway.control.v1.HttpMatch.headers:type_name -> gateway.control.v1.HeaderMatch
-	41, // 29: gateway.control.v1.HttpMatch.query_params:type_name -> gateway.control.v1.QueryMatch
-	60, // 30: gateway.control.v1.HttpRouteTimeouts.request:type_name -> google.protobuf.Duration
-	60, // 31: gateway.control.v1.HttpRouteTimeouts.backend_request:type_name -> google.protobuf.Duration
-	60, // 32: gateway.control.v1.HttpRouteRetry.backoff:type_name -> google.protobuf.Duration
-	6,  // 33: gateway.control.v1.CookieConfig.lifetime_type:type_name -> gateway.control.v1.CookieLifetimeType
-	60, // 34: gateway.control.v1.SessionPersistence.absolute_timeout:type_name -> google.protobuf.Duration
-	60, // 35: gateway.control.v1.SessionPersistence.idle_timeout:type_name -> google.protobuf.Duration
-	5,  // 36: gateway.control.v1.SessionPersistence.type:type_name -> gateway.control.v1.SessionPersistenceType
-	25, // 37: gateway.control.v1.SessionPersistence.cookie:type_name -> gateway.control.v1.CookieConfig
-	8,  // 38: gateway.control.v1.ConsistentHashPolicy.key_type:type_name -> gateway.control.v1.ConsistentHashKeyType
-	7,  // 39: gateway.control.v1.LoadBalancingPolicy.type:type_name -> gateway.control.v1.LoadBalancingPolicyType
-	27, // 40: gateway.control.v1.LoadBalancingPolicy.consistent_hash:type_name -> gateway.control.v1.ConsistentHashPolicy
-	35, // 41: gateway.control.v1.GrpcRoute.parent_refs:type_name -> gateway.control.v1.ParentRef
-	30, // 42: gateway.control.v1.GrpcRoute.rules:type_name -> gateway.control.v1.GrpcRule
-	52, // 43: gateway.control.v1.GrpcRoute.labels:type_name -> gateway.control.v1.GrpcRoute.LabelsEntry
-	53, // 44: gateway.control.v1.GrpcRoute.annotations:type_name -> gateway.control.v1.GrpcRoute.AnnotationsEntry
-	31, // 45: gateway.control.v1.GrpcRule.matches:type_name -> gateway.control.v1.GrpcMatch
-	42, // 46: gateway.control.v1.GrpcRule.filters:type_name -> gateway.control.v1.Filter
-	36, // 47: gateway.control.v1.GrpcRule.backend_refs:type_name -> gateway.control.v1.BackendRef
-	26, // 48: gateway.control.v1.GrpcRule.session_persistence:type_name -> gateway.control.v1.SessionPersistence
-	40, // 49: gateway.control.v1.GrpcMatch.headers:type_name -> gateway.control.v1.HeaderMatch
-	3,  // 50: gateway.control.v1.StreamRoute.kind:type_name -> gateway.control.v1.RouteKind
-	35, // 51: gateway.control.v1.StreamRoute.parent_refs:type_name -> gateway.control.v1.ParentRef
-	33, // 52: gateway.control.v1.StreamRoute.rules:type_name -> gateway.control.v1.StreamRule
-	54, // 53: gateway.control.v1.StreamRoute.labels:type_name -> gateway.control.v1.StreamRoute.LabelsEntry
-	55, // 54: gateway.control.v1.StreamRoute.annotations:type_name -> gateway.control.v1.StreamRoute.AnnotationsEntry
-	34, // 55: gateway.control.v1.StreamRule.matches:type_name -> gateway.control.v1.StreamMatch
-	36, // 56: gateway.control.v1.StreamRule.backend_refs:type_name -> gateway.control.v1.BackendRef
-	2,  // 57: gateway.control.v1.StreamMatch.mode:type_name -> gateway.control.v1.TlsRouteMode
-	56, // 58: gateway.control.v1.BackendRef.metadata:type_name -> gateway.control.v1.BackendRef.MetadataEntry
-	42, // 59: gateway.control.v1.BackendRef.filters:type_name -> gateway.control.v1.Filter
-	39, // 60: gateway.control.v1.BackendCluster.endpoints:type_name -> gateway.control.v1.BackendEndpoint
-	60, // 61: gateway.control.v1.BackendCluster.connect_timeout:type_name -> google.protobuf.Duration
-	60, // 62: gateway.control.v1.BackendCluster.request_timeout:type_name -> google.protobuf.Duration
-	57, // 63: gateway.control.v1.BackendCluster.metadata:type_name -> gateway.control.v1.BackendCluster.MetadataEntry
-	18, // 64: gateway.control.v1.BackendCluster.tls_validation:type_name -> gateway.control.v1.BackendTlsValidation
-	26, // 65: gateway.control.v1.BackendCluster.session_persistence:type_name -> gateway.control.v1.SessionPersistence
-	28, // 66: gateway.control.v1.BackendCluster.load_balancing:type_name -> gateway.control.v1.LoadBalancingPolicy
-	44, // 67: gateway.control.v1.BackendCluster.ai_service:type_name -> gateway.control.v1.AIServiceConfig
-	46, // 68: gateway.control.v1.BackendCluster.token_policy:type_name -> gateway.control.v1.TokenPolicyConfig
-	47, // 69: gateway.control.v1.BackendCluster.wasm_plugin:type_name -> gateway.control.v1.WasmPluginConfig
-	38, // 70: gateway.control.v1.BackendCluster.circuit_breaker:type_name -> gateway.control.v1.CircuitBreakerConfig
-	59, // 71: gateway.control.v1.Filter.config:type_name -> google.protobuf.Struct
-	45, // 72: gateway.control.v1.AIServiceConfig.auth:type_name -> gateway.control.v1.AIServiceAuthConfig
-	60, // 73: gateway.control.v1.AIServiceConfig.timeout:type_name -> google.protobuf.Duration
-	48, // 74: gateway.control.v1.WasmPluginConfig.sandbox:type_name -> gateway.control.v1.WasmSandboxConfig
-	9,  // 75: gateway.control.v1.ConfigurationDiscoveryService.StreamConfiguration:input_type -> gateway.control.v1.DiscoveryRequest
-	11, // 76: gateway.control.v1.ConfigurationDiscoveryService.ReportStatus:input_type -> gateway.control.v1.StatusReport
-	10, // 77: gateway.control.v1.ConfigurationDiscoveryService.StreamConfiguration:output_type -> gateway.control.v1.DiscoveryResponse
-	12, // 78: gateway.control.v1.ConfigurationDiscoveryService.ReportStatus:output_type -> gateway.control.v1.StatusAck
-	77, // [77:79] is the sub-list for method output_type
-	75, // [75:77] is the sub-list for method input_type
-	75, // [75:75] is the sub-list for extension type_name
-	75, // [75:75] is the sub-list for extension extendee
-	0,  // [0:75] is the sub-list for field type_name
+	55, // 20: gateway.control.v1.HttpRoute.labels:type_name -> gateway.control.v1.HttpRoute.LabelsEntry
+	56, // 21: gateway.control.v1.HttpRoute.annotations:type_name -> gateway.control.v1.HttpRoute.AnnotationsEntry
+	37, // 22: gateway.control.v1.HttpRoute.route_policy:type_name -> gateway.control.v1.RoutePolicy
+	22, // 23: gateway.control.v1.HttpRule.matches:type_name -> gateway.control.v1.HttpMatch
+	47, // 24: gateway.control.v1.HttpRule.filters:type_name -> gateway.control.v1.Filter
+	36, // 25: gateway.control.v1.HttpRule.backend_refs:type_name -> gateway.control.v1.BackendRef
+	23, // 26: gateway.control.v1.HttpRule.timeouts:type_name -> gateway.control.v1.HttpRouteTimeouts
+	24, // 27: gateway.control.v1.HttpRule.retry:type_name -> gateway.control.v1.HttpRouteRetry
+	26, // 28: gateway.control.v1.HttpRule.session_persistence:type_name -> gateway.control.v1.SessionPersistence
+	45, // 29: gateway.control.v1.HttpMatch.headers:type_name -> gateway.control.v1.HeaderMatch
+	46, // 30: gateway.control.v1.HttpMatch.query_params:type_name -> gateway.control.v1.QueryMatch
+	65, // 31: gateway.control.v1.HttpRouteTimeouts.request:type_name -> google.protobuf.Duration
+	65, // 32: gateway.control.v1.HttpRouteTimeouts.backend_request:type_name -> google.protobuf.Duration
+	65, // 33: gateway.control.v1.HttpRouteRetry.backoff:type_name -> google.protobuf.Duration
+	6,  // 34: gateway.control.v1.CookieConfig.lifetime_type:type_name -> gateway.control.v1.CookieLifetimeType
+	65, // 35: gateway.control.v1.SessionPersistence.absolute_timeout:type_name -> google.protobuf.Duration
+	65, // 36: gateway.control.v1.SessionPersistence.idle_timeout:type_name -> google.protobuf.Duration
+	5,  // 37: gateway.control.v1.SessionPersistence.type:type_name -> gateway.control.v1.SessionPersistenceType
+	25, // 38: gateway.control.v1.SessionPersistence.cookie:type_name -> gateway.control.v1.CookieConfig
+	8,  // 39: gateway.control.v1.ConsistentHashPolicy.key_type:type_name -> gateway.control.v1.ConsistentHashKeyType
+	7,  // 40: gateway.control.v1.LoadBalancingPolicy.type:type_name -> gateway.control.v1.LoadBalancingPolicyType
+	27, // 41: gateway.control.v1.LoadBalancingPolicy.consistent_hash:type_name -> gateway.control.v1.ConsistentHashPolicy
+	35, // 42: gateway.control.v1.GrpcRoute.parent_refs:type_name -> gateway.control.v1.ParentRef
+	30, // 43: gateway.control.v1.GrpcRoute.rules:type_name -> gateway.control.v1.GrpcRule
+	57, // 44: gateway.control.v1.GrpcRoute.labels:type_name -> gateway.control.v1.GrpcRoute.LabelsEntry
+	58, // 45: gateway.control.v1.GrpcRoute.annotations:type_name -> gateway.control.v1.GrpcRoute.AnnotationsEntry
+	37, // 46: gateway.control.v1.GrpcRoute.route_policy:type_name -> gateway.control.v1.RoutePolicy
+	31, // 47: gateway.control.v1.GrpcRule.matches:type_name -> gateway.control.v1.GrpcMatch
+	47, // 48: gateway.control.v1.GrpcRule.filters:type_name -> gateway.control.v1.Filter
+	36, // 49: gateway.control.v1.GrpcRule.backend_refs:type_name -> gateway.control.v1.BackendRef
+	26, // 50: gateway.control.v1.GrpcRule.session_persistence:type_name -> gateway.control.v1.SessionPersistence
+	45, // 51: gateway.control.v1.GrpcMatch.headers:type_name -> gateway.control.v1.HeaderMatch
+	3,  // 52: gateway.control.v1.StreamRoute.kind:type_name -> gateway.control.v1.RouteKind
+	35, // 53: gateway.control.v1.StreamRoute.parent_refs:type_name -> gateway.control.v1.ParentRef
+	33, // 54: gateway.control.v1.StreamRoute.rules:type_name -> gateway.control.v1.StreamRule
+	59, // 55: gateway.control.v1.StreamRoute.labels:type_name -> gateway.control.v1.StreamRoute.LabelsEntry
+	60, // 56: gateway.control.v1.StreamRoute.annotations:type_name -> gateway.control.v1.StreamRoute.AnnotationsEntry
+	34, // 57: gateway.control.v1.StreamRule.matches:type_name -> gateway.control.v1.StreamMatch
+	36, // 58: gateway.control.v1.StreamRule.backend_refs:type_name -> gateway.control.v1.BackendRef
+	2,  // 59: gateway.control.v1.StreamMatch.mode:type_name -> gateway.control.v1.TlsRouteMode
+	61, // 60: gateway.control.v1.BackendRef.metadata:type_name -> gateway.control.v1.BackendRef.MetadataEntry
+	47, // 61: gateway.control.v1.BackendRef.filters:type_name -> gateway.control.v1.Filter
+	38, // 62: gateway.control.v1.RoutePolicy.timeout:type_name -> gateway.control.v1.RoutePolicyTimeout
+	39, // 63: gateway.control.v1.RoutePolicy.body_limit:type_name -> gateway.control.v1.RoutePolicyBodyLimit
+	40, // 64: gateway.control.v1.RoutePolicy.proxy:type_name -> gateway.control.v1.RoutePolicyProxy
+	41, // 65: gateway.control.v1.RoutePolicy.connection:type_name -> gateway.control.v1.RoutePolicyConnection
+	65, // 66: gateway.control.v1.RoutePolicyTimeout.request:type_name -> google.protobuf.Duration
+	65, // 67: gateway.control.v1.RoutePolicyTimeout.backend_request:type_name -> google.protobuf.Duration
+	65, // 68: gateway.control.v1.RoutePolicyTimeout.connect:type_name -> google.protobuf.Duration
+	65, // 69: gateway.control.v1.RoutePolicyTimeout.next_upstream:type_name -> google.protobuf.Duration
+	66, // 70: gateway.control.v1.RoutePolicyProxy.request_buffering:type_name -> google.protobuf.BoolValue
+	66, // 71: gateway.control.v1.RoutePolicyProxy.response_buffering:type_name -> google.protobuf.BoolValue
+	65, // 72: gateway.control.v1.RoutePolicyConnection.keepalive_time:type_name -> google.protobuf.Duration
+	65, // 73: gateway.control.v1.RoutePolicyConnection.keepalive_timeout:type_name -> google.protobuf.Duration
+	65, // 74: gateway.control.v1.RoutePolicyConnection.upstream_keepalive_idle:type_name -> google.protobuf.Duration
+	44, // 75: gateway.control.v1.BackendCluster.endpoints:type_name -> gateway.control.v1.BackendEndpoint
+	65, // 76: gateway.control.v1.BackendCluster.connect_timeout:type_name -> google.protobuf.Duration
+	65, // 77: gateway.control.v1.BackendCluster.request_timeout:type_name -> google.protobuf.Duration
+	62, // 78: gateway.control.v1.BackendCluster.metadata:type_name -> gateway.control.v1.BackendCluster.MetadataEntry
+	18, // 79: gateway.control.v1.BackendCluster.tls_validation:type_name -> gateway.control.v1.BackendTlsValidation
+	26, // 80: gateway.control.v1.BackendCluster.session_persistence:type_name -> gateway.control.v1.SessionPersistence
+	28, // 81: gateway.control.v1.BackendCluster.load_balancing:type_name -> gateway.control.v1.LoadBalancingPolicy
+	49, // 82: gateway.control.v1.BackendCluster.ai_service:type_name -> gateway.control.v1.AIServiceConfig
+	51, // 83: gateway.control.v1.BackendCluster.token_policy:type_name -> gateway.control.v1.TokenPolicyConfig
+	52, // 84: gateway.control.v1.BackendCluster.wasm_plugin:type_name -> gateway.control.v1.WasmPluginConfig
+	43, // 85: gateway.control.v1.BackendCluster.circuit_breaker:type_name -> gateway.control.v1.CircuitBreakerConfig
+	64, // 86: gateway.control.v1.Filter.config:type_name -> google.protobuf.Struct
+	50, // 87: gateway.control.v1.AIServiceConfig.auth:type_name -> gateway.control.v1.AIServiceAuthConfig
+	65, // 88: gateway.control.v1.AIServiceConfig.timeout:type_name -> google.protobuf.Duration
+	53, // 89: gateway.control.v1.WasmPluginConfig.sandbox:type_name -> gateway.control.v1.WasmSandboxConfig
+	9,  // 90: gateway.control.v1.ConfigurationDiscoveryService.StreamConfiguration:input_type -> gateway.control.v1.DiscoveryRequest
+	11, // 91: gateway.control.v1.ConfigurationDiscoveryService.ReportStatus:input_type -> gateway.control.v1.StatusReport
+	10, // 92: gateway.control.v1.ConfigurationDiscoveryService.StreamConfiguration:output_type -> gateway.control.v1.DiscoveryResponse
+	12, // 93: gateway.control.v1.ConfigurationDiscoveryService.ReportStatus:output_type -> gateway.control.v1.StatusAck
+	92, // [92:94] is the sub-list for method output_type
+	90, // [90:92] is the sub-list for method input_type
+	90, // [90:90] is the sub-list for extension type_name
+	90, // [90:90] is the sub-list for extension extendee
+	0,  // [0:90] is the sub-list for field type_name
 }
 
 func init() { file_gateway_control_v1_control_proto_init() }
@@ -4297,7 +4712,7 @@ func file_gateway_control_v1_control_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gateway_control_v1_control_proto_rawDesc), len(file_gateway_control_v1_control_proto_rawDesc)),
 			NumEnums:      9,
-			NumMessages:   49,
+			NumMessages:   54,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
