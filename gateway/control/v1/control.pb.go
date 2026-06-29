@@ -2845,12 +2845,18 @@ func (x *BackendRef) GetFilters() []*Filter {
 }
 
 // RoutePolicy provides per-route overrides for timeout, body size,
-// proxy buffering, and connection keepalive settings.
+// proxy buffering, and connection keepalive settings. When attached
+// to an HttpRoute or GrpcRoute, fields set here override the
+// dataplane global defaults for that route.
 type RoutePolicy struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Timeout       *RoutePolicyTimeout    `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	BodyLimit     *RoutePolicyBodyLimit  `protobuf:"bytes,2,opt,name=body_limit,json=bodyLimit,proto3" json:"body_limit,omitempty"`
-	Proxy         *RoutePolicyProxy      `protobuf:"bytes,3,opt,name=proxy,proto3" json:"proxy,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Per-route timeout overrides for request, backend, and connection timeouts.
+	Timeout *RoutePolicyTimeout `protobuf:"bytes,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// Per-route body and header size limits.
+	BodyLimit *RoutePolicyBodyLimit `protobuf:"bytes,2,opt,name=body_limit,json=bodyLimit,proto3" json:"body_limit,omitempty"`
+	// Per-route proxy buffering configuration.
+	Proxy *RoutePolicyProxy `protobuf:"bytes,3,opt,name=proxy,proto3" json:"proxy,omitempty"`
+	// Per-route connection keepalive settings for client and upstream connections.
 	Connection    *RoutePolicyConnection `protobuf:"bytes,4,opt,name=connection,proto3" json:"connection,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2914,14 +2920,20 @@ func (x *RoutePolicy) GetConnection() *RoutePolicyConnection {
 	return nil
 }
 
+// RoutePolicyTimeout specifies per-route timeout values that override
+// the dataplane global timeout defaults.
 type RoutePolicyTimeout struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Request        *durationpb.Duration   `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
-	BackendRequest *durationpb.Duration   `protobuf:"bytes,2,opt,name=backend_request,json=backendRequest,proto3" json:"backend_request,omitempty"`
-	Connect        *durationpb.Duration   `protobuf:"bytes,3,opt,name=connect,proto3" json:"connect,omitempty"`
-	NextUpstream   *durationpb.Duration   `protobuf:"bytes,4,opt,name=next_upstream,json=nextUpstream,proto3" json:"next_upstream,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Maximum duration for the entire request-response cycle (from first byte received to last byte sent).
+	Request *durationpb.Duration `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
+	// Maximum duration for a single backend request attempt (a single upstream connection).
+	BackendRequest *durationpb.Duration `protobuf:"bytes,2,opt,name=backend_request,json=backendRequest,proto3" json:"backend_request,omitempty"`
+	// Maximum duration to establish a TCP connection to the backend.
+	Connect *durationpb.Duration `protobuf:"bytes,3,opt,name=connect,proto3" json:"connect,omitempty"`
+	// Maximum duration spent finding a viable upstream backend during retries.
+	NextUpstream  *durationpb.Duration `protobuf:"bytes,4,opt,name=next_upstream,json=nextUpstream,proto3" json:"next_upstream,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RoutePolicyTimeout) Reset() {
@@ -2982,13 +2994,17 @@ func (x *RoutePolicyTimeout) GetNextUpstream() *durationpb.Duration {
 	return nil
 }
 
+// RoutePolicyBodyLimit restricts request body and header sizes on a per-route basis.
 type RoutePolicyBodyLimit struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	MaxRequestBodyBytes    uint64                 `protobuf:"varint,1,opt,name=max_request_body_bytes,json=maxRequestBodyBytes,proto3" json:"max_request_body_bytes,omitempty"`
-	RequestBodyBufferBytes uint64                 `protobuf:"varint,2,opt,name=request_body_buffer_bytes,json=requestBodyBufferBytes,proto3" json:"request_body_buffer_bytes,omitempty"`
-	MaxRequestHeaderBytes  uint64                 `protobuf:"varint,3,opt,name=max_request_header_bytes,json=maxRequestHeaderBytes,proto3" json:"max_request_header_bytes,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Maximum request body size in bytes. Requests exceeding this receive HTTP 413 (Payload Too Large).
+	MaxRequestBodyBytes uint64 `protobuf:"varint,1,opt,name=max_request_body_bytes,json=maxRequestBodyBytes,proto3" json:"max_request_body_bytes,omitempty"`
+	// Size of the buffer used to read the request body before writing to a temporary file.
+	RequestBodyBufferBytes uint64 `protobuf:"varint,2,opt,name=request_body_buffer_bytes,json=requestBodyBufferBytes,proto3" json:"request_body_buffer_bytes,omitempty"`
+	// Maximum combined size of all request headers in bytes.
+	MaxRequestHeaderBytes uint64 `protobuf:"varint,3,opt,name=max_request_header_bytes,json=maxRequestHeaderBytes,proto3" json:"max_request_header_bytes,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *RoutePolicyBodyLimit) Reset() {
@@ -3042,14 +3058,19 @@ func (x *RoutePolicyBodyLimit) GetMaxRequestHeaderBytes() uint64 {
 	return 0
 }
 
+// RoutePolicyProxy controls HTTP proxy buffering behavior on a per-route basis.
 type RoutePolicyProxy struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	RequestBuffering  *wrapperspb.BoolValue  `protobuf:"bytes,1,opt,name=request_buffering,json=requestBuffering,proto3" json:"request_buffering,omitempty"`
-	ResponseBuffering *wrapperspb.BoolValue  `protobuf:"bytes,2,opt,name=response_buffering,json=responseBuffering,proto3" json:"response_buffering,omitempty"`
-	BufferSize        uint64                 `protobuf:"varint,3,opt,name=buffer_size,json=bufferSize,proto3" json:"buffer_size,omitempty"`
-	BufferCount       uint32                 `protobuf:"varint,4,opt,name=buffer_count,json=bufferCount,proto3" json:"buffer_count,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// If true, buffer the entire client request body before proxying to the backend.
+	RequestBuffering *wrapperspb.BoolValue `protobuf:"bytes,1,opt,name=request_buffering,json=requestBuffering,proto3" json:"request_buffering,omitempty"`
+	// If true, buffer the backend response before sending to the client. If false, stream the response.
+	ResponseBuffering *wrapperspb.BoolValue `protobuf:"bytes,2,opt,name=response_buffering,json=responseBuffering,proto3" json:"response_buffering,omitempty"`
+	// Size of each response buffer in bytes (used when response_buffering is enabled).
+	BufferSize uint64 `protobuf:"varint,3,opt,name=buffer_size,json=bufferSize,proto3" json:"buffer_size,omitempty"`
+	// Number of response buffers to allocate (used when response_buffering is enabled).
+	BufferCount   uint32 `protobuf:"varint,4,opt,name=buffer_count,json=bufferCount,proto3" json:"buffer_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RoutePolicyProxy) Reset() {
@@ -3110,15 +3131,22 @@ func (x *RoutePolicyProxy) GetBufferCount() uint32 {
 	return 0
 }
 
+// RoutePolicyConnection controls keepalive behavior for client-facing and
+// upstream connections on a per-route basis.
 type RoutePolicyConnection struct {
-	state                     protoimpl.MessageState `protogen:"open.v1"`
-	KeepaliveRequests         uint32                 `protobuf:"varint,1,opt,name=keepalive_requests,json=keepaliveRequests,proto3" json:"keepalive_requests,omitempty"`
-	KeepaliveTime             *durationpb.Duration   `protobuf:"bytes,2,opt,name=keepalive_time,json=keepaliveTime,proto3" json:"keepalive_time,omitempty"`
-	KeepaliveTimeout          *durationpb.Duration   `protobuf:"bytes,3,opt,name=keepalive_timeout,json=keepaliveTimeout,proto3" json:"keepalive_timeout,omitempty"`
-	UpstreamKeepalivePoolSize uint32                 `protobuf:"varint,4,opt,name=upstream_keepalive_pool_size,json=upstreamKeepalivePoolSize,proto3" json:"upstream_keepalive_pool_size,omitempty"`
-	UpstreamKeepaliveIdle     *durationpb.Duration   `protobuf:"bytes,5,opt,name=upstream_keepalive_idle,json=upstreamKeepaliveIdle,proto3" json:"upstream_keepalive_idle,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Maximum number of requests allowed on a single keepalive client connection.
+	KeepaliveRequests uint32 `protobuf:"varint,1,opt,name=keepalive_requests,json=keepaliveRequests,proto3" json:"keepalive_requests,omitempty"`
+	// Maximum lifetime of a keepalive client connection.
+	KeepaliveTime *durationpb.Duration `protobuf:"bytes,2,opt,name=keepalive_time,json=keepaliveTime,proto3" json:"keepalive_time,omitempty"`
+	// Maximum idle time before closing a keepalive client connection.
+	KeepaliveTimeout *durationpb.Duration `protobuf:"bytes,3,opt,name=keepalive_timeout,json=keepaliveTimeout,proto3" json:"keepalive_timeout,omitempty"`
+	// Maximum number of idle upstream keepalive connections to maintain in the pool.
+	UpstreamKeepalivePoolSize uint32 `protobuf:"varint,4,opt,name=upstream_keepalive_pool_size,json=upstreamKeepalivePoolSize,proto3" json:"upstream_keepalive_pool_size,omitempty"`
+	// Maximum idle time before closing an upstream keepalive connection.
+	UpstreamKeepaliveIdle *durationpb.Duration `protobuf:"bytes,5,opt,name=upstream_keepalive_idle,json=upstreamKeepaliveIdle,proto3" json:"upstream_keepalive_idle,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *RoutePolicyConnection) Reset() {
