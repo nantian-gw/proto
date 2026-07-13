@@ -102,8 +102,10 @@ message StatusReport {
 }
 
 // StatusAck is the control plane's acknowledgement of a StatusReport.
+// It confirms receipt and optionally carries back instructions to the
+// data plane (future: e.g. "reload", "drain", "shutdown").
 message StatusAck {
-  // Whether the status report was accepted.
+  // Whether the status report was received and processed successfully.
   bool accepted = 1;
 }
 
