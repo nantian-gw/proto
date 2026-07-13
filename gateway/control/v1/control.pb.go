@@ -822,9 +822,11 @@ func (x *StatusReport) GetObservedAt() *timestamppb.Timestamp {
 }
 
 // StatusAck is the control plane's acknowledgement of a StatusReport.
+// It confirms receipt and optionally carries back instructions to the
+// data plane (future: e.g. "reload", "drain", "shutdown").
 type StatusAck struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Whether the status report was accepted.
+	// Whether the status report was received and processed successfully.
 	Accepted      bool `protobuf:"varint,1,opt,name=accepted,proto3" json:"accepted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
