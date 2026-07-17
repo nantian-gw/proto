@@ -18,12 +18,12 @@ syntax = "proto3";
 
 package gateway.control.v1;
 
-option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
-
 import "google/protobuf/duration.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
 
 // ConfigurationDiscoveryService is the core xDS control-plane API.
 // Data-plane instances use this service to receive configuration
