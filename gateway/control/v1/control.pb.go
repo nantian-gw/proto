@@ -898,8 +898,12 @@ type ConfigSnapshot struct {
 	// Named compatibility profile (e.g. "v1", "experimental"). The data plane
 	// uses this to enable/disable behavior flags atomically.
 	CompatibilityProfile string `protobuf:"bytes,11,opt,name=compatibility_profile,json=compatibilityProfile,proto3" json:"compatibility_profile,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// W3C TraceContext traceparent header value. The control plane injects
+	// its current trace context so the data plane can create child spans
+	// linked to the snapshot generation trace.
+	Traceparent   string `protobuf:"bytes,20,opt,name=traceparent,proto3" json:"traceparent,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ConfigSnapshot) Reset() {
@@ -1005,6 +1009,13 @@ func (x *ConfigSnapshot) GetRequiredFeatures() []string {
 func (x *ConfigSnapshot) GetCompatibilityProfile() string {
 	if x != nil {
 		return x.CompatibilityProfile
+	}
+	return ""
+}
+
+func (x *ConfigSnapshot) GetTraceparent() string {
+	if x != nil {
+		return x.Traceparent
 	}
 	return ""
 }
@@ -4201,7 +4212,7 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"\vobserved_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"observedAt\"'\n" +
 	"\tStatusAck\x12\x1a\n" +
-	"\baccepted\x18\x01 \x01(\bR\baccepted\"\xfa\x04\n" +
+	"\baccepted\x18\x01 \x01(\bR\baccepted\"\x9c\x05\n" +
 	"\x0eConfigSnapshot\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12=\n" +
 	"\fgenerated_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\vgeneratedAt\x12:\n" +
@@ -4218,7 +4229,8 @@ const file_gateway_control_v1_control_proto_rawDesc = "" +
 	"extensions\x12+\n" +
 	"\x11required_features\x18\n" +
 	" \x03(\tR\x10requiredFeatures\x123\n" +
-	"\x15compatibility_profile\x18\v \x01(\tR\x14compatibilityProfile\"\xf0\x03\n" +
+	"\x15compatibility_profile\x18\v \x01(\tR\x14compatibilityProfile\x12 \n" +
+	"\vtraceparent\x18\x14 \x01(\tR\vtraceparent\"\xf0\x03\n" +
 	"\bListener\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
 	"\aaddress\x18\x02 \x01(\tR\aaddress\x12\x12\n" +

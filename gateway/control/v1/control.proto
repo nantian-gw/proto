@@ -137,6 +137,10 @@ message ConfigSnapshot {
   // Named compatibility profile (e.g. "v1", "experimental"). The data plane
   // uses this to enable/disable behavior flags atomically.
   string compatibility_profile = 11;
+  // W3C TraceContext traceparent header value. The control plane injects
+  // its current trace context so the data plane can create child spans
+  // linked to the snapshot generation trace.
+  string traceparent = 20;
 }
 
 // ListenerProtocol enumerates the transport-layer protocols a listener can serve.
