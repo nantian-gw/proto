@@ -189,3 +189,133 @@ var ConfigurationDiscoveryService_ServiceDesc = grpc.ServiceDesc{
 	},
 	Metadata: "gateway/control/v1/control.proto",
 }
+
+const (
+	DeltaDiscoveryService_DeltaStreamConfiguration_FullMethodName = "/gateway.control.v1.DeltaDiscoveryService/DeltaStreamConfiguration"
+)
+
+// DeltaDiscoveryServiceClient is the client API for DeltaDiscoveryService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// DeltaDiscoveryService is the incremental xDS API for efficient
+// configuration delivery. Unlike SotW (state-of-the-world), only
+// changed resources are pushed. Data planes maintain their own
+// resource state and request updates for specific resources.
+//
+// Protocol flow:
+//  1. Data plane opens DeltaStreamConfiguration, sending a
+//     DeltaDiscoveryRequest with initial resource subscriptions.
+//  2. Control plane responds with a DeltaDiscoveryResponse containing
+//     subscribed resources (full initial state).
+//  3. On config change, control plane computes diff and pushes only
+//     added/changed/removed resources.
+//  4. Data plane ACKs/NACKs each response individually.
+type DeltaDiscoveryServiceClient interface {
+	// DeltaStreamConfiguration is the incremental-equivalent of
+	// StreamConfiguration. Subscriptions are per-resource and can be
+	// dynamically changed mid-stream.
+	DeltaStreamConfiguration(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[DeltaDiscoveryRequest, DeltaDiscoveryResponse], error)
+}
+
+type deltaDiscoveryServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewDeltaDiscoveryServiceClient(cc grpc.ClientConnInterface) DeltaDiscoveryServiceClient {
+	return &deltaDiscoveryServiceClient{cc}
+}
+
+func (c *deltaDiscoveryServiceClient) DeltaStreamConfiguration(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[DeltaDiscoveryRequest, DeltaDiscoveryResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &DeltaDiscoveryService_ServiceDesc.Streams[0], DeltaDiscoveryService_DeltaStreamConfiguration_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[DeltaDiscoveryRequest, DeltaDiscoveryResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeltaDiscoveryService_DeltaStreamConfigurationClient = grpc.BidiStreamingClient[DeltaDiscoveryRequest, DeltaDiscoveryResponse]
+
+// DeltaDiscoveryServiceServer is the server API for DeltaDiscoveryService service.
+// All implementations must embed UnimplementedDeltaDiscoveryServiceServer
+// for forward compatibility.
+//
+// DeltaDiscoveryService is the incremental xDS API for efficient
+// configuration delivery. Unlike SotW (state-of-the-world), only
+// changed resources are pushed. Data planes maintain their own
+// resource state and request updates for specific resources.
+//
+// Protocol flow:
+//  1. Data plane opens DeltaStreamConfiguration, sending a
+//     DeltaDiscoveryRequest with initial resource subscriptions.
+//  2. Control plane responds with a DeltaDiscoveryResponse containing
+//     subscribed resources (full initial state).
+//  3. On config change, control plane computes diff and pushes only
+//     added/changed/removed resources.
+//  4. Data plane ACKs/NACKs each response individually.
+type DeltaDiscoveryServiceServer interface {
+	// DeltaStreamConfiguration is the incremental-equivalent of
+	// StreamConfiguration. Subscriptions are per-resource and can be
+	// dynamically changed mid-stream.
+	DeltaStreamConfiguration(grpc.BidiStreamingServer[DeltaDiscoveryRequest, DeltaDiscoveryResponse]) error
+	mustEmbedUnimplementedDeltaDiscoveryServiceServer()
+}
+
+// UnimplementedDeltaDiscoveryServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedDeltaDiscoveryServiceServer struct{}
+
+func (UnimplementedDeltaDiscoveryServiceServer) DeltaStreamConfiguration(grpc.BidiStreamingServer[DeltaDiscoveryRequest, DeltaDiscoveryResponse]) error {
+	return status.Error(codes.Unimplemented, "method DeltaStreamConfiguration not implemented")
+}
+func (UnimplementedDeltaDiscoveryServiceServer) mustEmbedUnimplementedDeltaDiscoveryServiceServer() {}
+func (UnimplementedDeltaDiscoveryServiceServer) testEmbeddedByValue()                               {}
+
+// UnsafeDeltaDiscoveryServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to DeltaDiscoveryServiceServer will
+// result in compilation errors.
+type UnsafeDeltaDiscoveryServiceServer interface {
+	mustEmbedUnimplementedDeltaDiscoveryServiceServer()
+}
+
+func RegisterDeltaDiscoveryServiceServer(s grpc.ServiceRegistrar, srv DeltaDiscoveryServiceServer) {
+	// If the following call panics, it indicates UnimplementedDeltaDiscoveryServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&DeltaDiscoveryService_ServiceDesc, srv)
+}
+
+func _DeltaDiscoveryService_DeltaStreamConfiguration_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(DeltaDiscoveryServiceServer).DeltaStreamConfiguration(&grpc.GenericServerStream[DeltaDiscoveryRequest, DeltaDiscoveryResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type DeltaDiscoveryService_DeltaStreamConfigurationServer = grpc.BidiStreamingServer[DeltaDiscoveryRequest, DeltaDiscoveryResponse]
+
+// DeltaDiscoveryService_ServiceDesc is the grpc.ServiceDesc for DeltaDiscoveryService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var DeltaDiscoveryService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "gateway.control.v1.DeltaDiscoveryService",
+	HandlerType: (*DeltaDiscoveryServiceServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "DeltaStreamConfiguration",
+			Handler:       _DeltaDiscoveryService_DeltaStreamConfiguration_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "gateway/control/v1/control.proto",
+}
