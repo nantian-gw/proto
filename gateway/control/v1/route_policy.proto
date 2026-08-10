@@ -1,0 +1,78 @@
+// Nantian Gateway Route Policy Configuration
+//
+// This file defines per-route policy overrides for timeout, body size,
+// proxy buffering, and connection keepalive settings.
+
+syntax = "proto3";
+
+package gateway.control.v1;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
+
+// RoutePolicy provides per-route overrides for timeout, body size,
+// proxy buffering, and connection keepalive settings. When attached
+// to an HttpRoute or GrpcRoute, fields set here override the
+// dataplane global defaults for that route.
+message RoutePolicy {
+  // Per-route timeout overrides for request, backend, and connection timeouts.
+  RoutePolicyTimeout timeout = 1;
+  // Per-route body and header size limits.
+  RoutePolicyBodyLimit body_limit = 2;
+  // Per-route proxy buffering configuration.
+  RoutePolicyProxy proxy = 3;
+  // Per-route connection keepalive settings for client and upstream connections.
+  RoutePolicyConnection connection = 4;
+}
+
+// RoutePolicyTimeout specifies per-route timeout values that override
+// the dataplane global timeout defaults.
+message RoutePolicyTimeout {
+  // Maximum duration for the entire request-response cycle (from first byte received to last byte sent).
+  google.protobuf.Duration request = 1;
+  // Maximum duration for a single backend request attempt (a single upstream connection).
+  google.protobuf.Duration backend_request = 2;
+  // Maximum duration to establish a TCP connection to the backend.
+  google.protobuf.Duration connect = 3;
+  // Maximum duration spent finding a viable upstream backend during retries.
+  google.protobuf.Duration next_upstream = 4;
+}
+
+// RoutePolicyBodyLimit restricts request body and header sizes on a per-route basis.
+message RoutePolicyBodyLimit {
+  // Maximum request body size in bytes. Requests exceeding this receive HTTP 413 (Payload Too Large).
+  uint64 max_request_body_bytes = 1;
+  // Size of the buffer used to read the request body before writing to a temporary file.
+  uint64 request_body_buffer_bytes = 2;
+  // Maximum combined size of all request headers in bytes.
+  uint64 max_request_header_bytes = 3;
+}
+
+// RoutePolicyProxy controls HTTP proxy buffering behavior on a per-route basis.
+message RoutePolicyProxy {
+  // If true, buffer the entire client request body before proxying to the backend.
+  google.protobuf.BoolValue request_buffering = 1;
+  // If true, buffer the backend response before sending to the client. If false, stream the response.
+  google.protobuf.BoolValue response_buffering = 2;
+  // Size of each response buffer in bytes (used when response_buffering is enabled).
+  uint64 buffer_size = 3;
+  // Number of response buffers to allocate (used when response_buffering is enabled).
+  uint32 buffer_count = 4;
+}
+
+// RoutePolicyConnection controls keepalive behavior for client-facing and
+// upstream connections on a per-route basis.
+message RoutePolicyConnection {
+  // Maximum number of requests allowed on a single keepalive client connection.
+  uint32 keepalive_requests = 1;
+  // Maximum lifetime of a keepalive client connection.
+  google.protobuf.Duration keepalive_time = 2;
+  // Maximum idle time before closing a keepalive client connection.
+  google.protobuf.Duration keepalive_timeout = 3;
+  // Maximum number of idle upstream keepalive connections to maintain in the pool.
+  uint32 upstream_keepalive_pool_size = 4;
+  // Maximum idle time before closing an upstream keepalive connection.
+  google.protobuf.Duration upstream_keepalive_idle = 5;
+}

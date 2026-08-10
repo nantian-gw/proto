@@ -1,0 +1,43 @@
+// Nantian Gateway WebAssembly Plugin Configuration
+//
+// This file defines WebAssembly plugin configuration types for the
+// data plane to load and execute Wasm modules at specified hook points.
+
+syntax = "proto3";
+
+package gateway.control.v1;
+
+option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
+
+// WasmPluginConfig describes a WebAssembly plugin to be loaded and executed
+// by the data plane at specified hook points.
+message WasmPluginConfig {
+  // Plugin name (matches the Kubernetes WasmPlugin resource name).
+  string name = 1;
+  // Kubernetes namespace of the plugin resource.
+  string namespace = 2;
+  // Compiled WebAssembly module bytes.
+  bytes wasm_bytes = 3;
+  // SHA-256 hash of the Wasm module for integrity verification.
+  string sha256 = 4;
+  // Hook points where this plugin executes (e.g. "http-request-headers",
+  // "http-response-body", "grpc-request").
+  repeated string hooks = 5;
+  // JSON configuration passed to the plugin at initialization.
+  string config_json = 6;
+  // Sandbox constraints for Wasm execution.
+  WasmSandboxConfig sandbox = 7;
+}
+
+// WasmSandboxConfig defines resource limits and security constraints
+// for WebAssembly plugin execution.
+message WasmSandboxConfig {
+  // Maximum memory the Wasm module can allocate, in bytes.
+  uint64 max_memory_bytes = 1;
+  // Maximum execution time per hook invocation, in milliseconds.
+  uint64 max_execution_time_ms = 2;
+  // Whether the plugin can make outbound network requests.
+  bool allow_network = 3;
+  // Whether the plugin can access the host file system.
+  bool allow_file_system = 4;
+}

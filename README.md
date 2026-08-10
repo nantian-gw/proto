@@ -155,7 +155,12 @@ buf generate
 ```
 
 `make generate` is a wrapper around `buf generate`. Generated Go files are
-checked in so Go consumers can import this module directly.
+produced alongside the `.proto` source files (per `buf.gen.yaml` output configuration)
+and checked in so Go consumers can import this module directly.
+
+> [!NOTE]
+> The `gen/` directory was removed because it was unused; generated code
+> lives alongside the `.proto` source files.
 
 Before changing `.proto` files, run:
 

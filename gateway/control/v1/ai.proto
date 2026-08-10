@@ -1,0 +1,55 @@
+// Nantian Gateway AI Service Configuration
+//
+// This file defines AI/LLM provider proxy configuration types for the
+// data plane to intercept and transform requests into provider-specific
+// API calls (OpenAI, Anthropic, Ollama, etc.).
+
+syntax = "proto3";
+
+package gateway.control.v1;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
+
+// AIServiceConfig configures an AI/LLM provider proxy for a backend cluster.
+// The data plane intercepts requests matching this backend and transforms
+// them into provider-specific API calls (OpenAI, Anthropic, Ollama, etc.).
+message AIServiceConfig {
+  // AI provider identifier (e.g. "openai", "anthropic", "ollama").
+  string provider = 1;
+  // API format for request/response transformation (e.g. "openai-chat", "anthropic-messages").
+  string format = 2;
+  // Default model name to use if not specified in the request.
+  string model = 3;
+  // Authentication configuration for the AI provider API.
+  AIServiceAuthConfig auth = 4;
+  // Timeout for AI provider API calls.
+  google.protobuf.Duration timeout = 5;
+}
+
+// AIServiceAuthConfig specifies how the data plane authenticates to an AI provider API.
+message AIServiceAuthConfig {
+  // Authentication type: "bearer", "api-key", or "basic".
+  string type = 1;
+  // Reference to a SecretMaterial or Kubernetes Secret containing the credential.
+  string secret_ref = 2;
+  // HTTP header name to inject the credential into (e.g. "Authorization", "x-api-key").
+  string header = 3;
+}
+
+// TokenPolicyConfig defines token-based rate limiting for AI model calls.
+message TokenPolicyConfig {
+  // Maximum tokens allowed per minute.
+  uint64 tokens_per_minute = 1;
+  // Maximum tokens allowed per hour.
+  uint64 tokens_per_hour = 2;
+  // Maximum requests allowed per minute.
+  uint64 requests_per_minute = 3;
+  // Scope of the rate limit: "global" (across all clients) or "per-user".
+  string scope = 4;
+  // Burst multiplier: allowed short-term overshoot as a ratio of the rate limit.
+  double burst = 5;
+  // Action when limit is exceeded: "reject" (429), "queue", or "degrade".
+  string on_limit = 6;
+}
