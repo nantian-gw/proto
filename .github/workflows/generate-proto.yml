@@ -47,11 +47,11 @@ jobs:
         run: buf generate
       - name: Check generated code is up to date
         run: |
-          if ! git diff --exit-code gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go; then
+          if ! git diff --exit-code -- 'gateway/control/v1/*.pb.go' 'gateway/control/v1/*_grpc.pb.go'; then
             echo "::error::Generated .pb.go files are out of date. Run 'buf generate' or 'make generate' locally and push the changes."
             echo ""
             echo "Changes detected:"
-            git diff --stat gateway/control/v1/control.pb.go gateway/control/v1/control_grpc.pb.go
+            git diff --stat -- 'gateway/control/v1/*.pb.go' 'gateway/control/v1/*_grpc.pb.go'
             exit 1
           fi
           echo "Generated code is up to date."
