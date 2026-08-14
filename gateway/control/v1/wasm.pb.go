@@ -45,6 +45,7 @@ type WasmPluginConfig struct {
 	ConfigJson string `protobuf:"bytes,6,opt,name=config_json,json=configJson,proto3" json:"config_json,omitempty"`
 	// Sandbox constraints for Wasm execution.
 	Sandbox *WasmSandboxConfig `protobuf:"bytes,7,opt,name=sandbox,proto3" json:"sandbox,omitempty"`
+	// Optional reference URL from which the data plane may fetch the module
 	// bytes instead of inlining them in `wasm_bytes`. When both are set,
 	// `wasm_bytes` takes precedence.
 	SourceUrl     string `protobuf:"bytes,8,opt,name=source_url,json=sourceUrl,proto3" json:"source_url,omitempty"`
