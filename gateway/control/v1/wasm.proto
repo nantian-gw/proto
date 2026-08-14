@@ -24,9 +24,12 @@ message WasmPluginConfig {
   // "http-response-body", "grpc-request").
   repeated string hooks = 5;
   // JSON configuration passed to the plugin at initialization.
-  string config_json = 6;
   // Sandbox constraints for Wasm execution.
   WasmSandboxConfig sandbox = 7;
+  // Optional reference URL from which the data plane may fetch the module
+  // bytes instead of inlining them in `wasm_bytes`. When both are set,
+  // `wasm_bytes` takes precedence.
+  string source_url = 8;
 }
 
 // WasmSandboxConfig defines resource limits and security constraints
