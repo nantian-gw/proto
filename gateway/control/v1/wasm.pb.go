@@ -42,9 +42,9 @@ type WasmPluginConfig struct {
 	// "http-response-body", "grpc-request").
 	Hooks []string `protobuf:"bytes,5,rep,name=hooks,proto3" json:"hooks,omitempty"`
 	// JSON configuration passed to the plugin at initialization.
+	ConfigJson string `protobuf:"bytes,6,opt,name=config_json,json=configJson,proto3" json:"config_json,omitempty"`
 	// Sandbox constraints for Wasm execution.
 	Sandbox *WasmSandboxConfig `protobuf:"bytes,7,opt,name=sandbox,proto3" json:"sandbox,omitempty"`
-	// Optional reference URL from which the data plane may fetch the module
 	// bytes instead of inlining them in `wasm_bytes`. When both are set,
 	// `wasm_bytes` takes precedence.
 	SourceUrl     string `protobuf:"bytes,8,opt,name=source_url,json=sourceUrl,proto3" json:"source_url,omitempty"`
@@ -115,6 +115,13 @@ func (x *WasmPluginConfig) GetHooks() []string {
 		return x.Hooks
 	}
 	return nil
+}
+
+func (x *WasmPluginConfig) GetConfigJson() string {
+	if x != nil {
+		return x.ConfigJson
+	}
+	return ""
 }
 
 func (x *WasmPluginConfig) GetSandbox() *WasmSandboxConfig {
@@ -209,14 +216,16 @@ var File_gateway_control_v1_wasm_proto protoreflect.FileDescriptor
 
 const file_gateway_control_v1_wasm_proto_rawDesc = "" +
 	"\n" +
-	"\x1dgateway/control/v1/wasm.proto\x12\x12gateway.control.v1\"\xf1\x01\n" +
+	"\x1dgateway/control/v1/wasm.proto\x12\x12gateway.control.v1\"\x92\x02\n" +
 	"\x10WasmPluginConfig\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n" +
 	"\tnamespace\x18\x02 \x01(\tR\tnamespace\x12\x1d\n" +
 	"\n" +
 	"wasm_bytes\x18\x03 \x01(\fR\twasmBytes\x12\x16\n" +
 	"\x06sha256\x18\x04 \x01(\tR\x06sha256\x12\x14\n" +
-	"\x05hooks\x18\x05 \x03(\tR\x05hooks\x12?\n" +
+	"\x05hooks\x18\x05 \x03(\tR\x05hooks\x12\x1f\n" +
+	"\vconfig_json\x18\x06 \x01(\tR\n" +
+	"configJson\x12?\n" +
 	"\asandbox\x18\a \x01(\v2%.gateway.control.v1.WasmSandboxConfigR\asandbox\x12\x1d\n" +
 	"\n" +
 	"source_url\x18\b \x01(\tR\tsourceUrl\"\xc1\x01\n" +
