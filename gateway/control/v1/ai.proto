@@ -26,6 +26,9 @@ message AIServiceConfig {
   AIServiceAuthConfig auth = 4;
   // Timeout for AI provider API calls.
   google.protobuf.Duration timeout = 5;
+  // Optional endpoint URL override for the AI provider API.
+  // If empty, the data plane uses the provider's default endpoint.
+  string endpoint = 6;
 }
 
 // AIServiceAuthConfig specifies how the data plane authenticates to an AI provider API.
@@ -36,6 +39,8 @@ message AIServiceAuthConfig {
   string secret_ref = 2;
   // HTTP header name to inject the credential into (e.g. "Authorization", "x-api-key").
   string header = 3;
+  // Key within the Kubernetes Secret to read the credential from.
+  string key = 4;
 }
 
 // TokenPolicyConfig defines token-based rate limiting for AI model calls.

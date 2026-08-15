@@ -42,7 +42,10 @@ type AIServiceConfig struct {
 	// Authentication configuration for the AI provider API.
 	Auth *AIServiceAuthConfig `protobuf:"bytes,4,opt,name=auth,proto3" json:"auth,omitempty"`
 	// Timeout for AI provider API calls.
-	Timeout       *durationpb.Duration `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Timeout *durationpb.Duration `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	// Optional endpoint URL override for the AI provider API.
+	// If empty, the data plane uses the provider's default endpoint.
+	Endpoint      string `protobuf:"bytes,6,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -112,6 +115,13 @@ func (x *AIServiceConfig) GetTimeout() *durationpb.Duration {
 	return nil
 }
 
+func (x *AIServiceConfig) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
+	}
+	return ""
+}
+
 // AIServiceAuthConfig specifies how the data plane authenticates to an AI provider API.
 type AIServiceAuthConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -120,7 +130,9 @@ type AIServiceAuthConfig struct {
 	// Reference to a SecretMaterial or Kubernetes Secret containing the credential.
 	SecretRef string `protobuf:"bytes,2,opt,name=secret_ref,json=secretRef,proto3" json:"secret_ref,omitempty"`
 	// HTTP header name to inject the credential into (e.g. "Authorization", "x-api-key").
-	Header        string `protobuf:"bytes,3,opt,name=header,proto3" json:"header,omitempty"`
+	Header string `protobuf:"bytes,3,opt,name=header,proto3" json:"header,omitempty"`
+	// Key within the Kubernetes Secret to read the credential from.
+	Key           string `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -172,6 +184,13 @@ func (x *AIServiceAuthConfig) GetSecretRef() string {
 func (x *AIServiceAuthConfig) GetHeader() string {
 	if x != nil {
 		return x.Header
+	}
+	return ""
+}
+
+func (x *AIServiceAuthConfig) GetKey() string {
+	if x != nil {
+		return x.Key
 	}
 	return ""
 }
@@ -271,18 +290,20 @@ var File_gateway_control_v1_ai_proto protoreflect.FileDescriptor
 
 const file_gateway_control_v1_ai_proto_rawDesc = "" +
 	"\n" +
-	"\x1bgateway/control/v1/ai.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\"\xcd\x01\n" +
+	"\x1bgateway/control/v1/ai.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\"\xe9\x01\n" +
 	"\x0fAIServiceConfig\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x16\n" +
 	"\x06format\x18\x02 \x01(\tR\x06format\x12\x14\n" +
 	"\x05model\x18\x03 \x01(\tR\x05model\x12;\n" +
 	"\x04auth\x18\x04 \x01(\v2'.gateway.control.v1.AIServiceAuthConfigR\x04auth\x123\n" +
-	"\atimeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"`\n" +
+	"\atimeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12\x1a\n" +
+	"\bendpoint\x18\x06 \x01(\tR\bendpoint\"r\n" +
 	"\x13AIServiceAuthConfig\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x1d\n" +
 	"\n" +
 	"secret_ref\x18\x02 \x01(\tR\tsecretRef\x12\x16\n" +
-	"\x06header\x18\x03 \x01(\tR\x06header\"\xde\x01\n" +
+	"\x06header\x18\x03 \x01(\tR\x06header\x12\x10\n" +
+	"\x03key\x18\x04 \x01(\tR\x03key\"\xde\x01\n" +
 	"\x11TokenPolicyConfig\x12*\n" +
 	"\x11tokens_per_minute\x18\x01 \x01(\x04R\x0ftokensPerMinute\x12&\n" +
 	"\x0ftokens_per_hour\x18\x02 \x01(\x04R\rtokensPerHour\x12.\n" +
