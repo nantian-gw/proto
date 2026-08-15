@@ -45,7 +45,11 @@ type AIServiceConfig struct {
 	Timeout *durationpb.Duration `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
 	// Optional endpoint URL override for the AI provider API.
 	// If empty, the data plane uses the provider's default endpoint.
-	Endpoint      string `protobuf:"bytes,6,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Endpoint string `protobuf:"bytes,6,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	// Maximum number of retry attempts for transient failures.
+	RetryMaxRetries uint32 `protobuf:"varint,7,opt,name=retry_max_retries,json=retryMaxRetries,proto3" json:"retry_max_retries,omitempty"`
+	// Base backoff duration between retries.
+	RetryBackoff  *durationpb.Duration `protobuf:"bytes,8,opt,name=retry_backoff,json=retryBackoff,proto3" json:"retry_backoff,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -120,6 +124,20 @@ func (x *AIServiceConfig) GetEndpoint() string {
 		return x.Endpoint
 	}
 	return ""
+}
+
+func (x *AIServiceConfig) GetRetryMaxRetries() uint32 {
+	if x != nil {
+		return x.RetryMaxRetries
+	}
+	return 0
+}
+
+func (x *AIServiceConfig) GetRetryBackoff() *durationpb.Duration {
+	if x != nil {
+		return x.RetryBackoff
+	}
+	return nil
 }
 
 // AIServiceAuthConfig specifies how the data plane authenticates to an AI provider API.
@@ -290,14 +308,16 @@ var File_gateway_control_v1_ai_proto protoreflect.FileDescriptor
 
 const file_gateway_control_v1_ai_proto_rawDesc = "" +
 	"\n" +
-	"\x1bgateway/control/v1/ai.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\"\xe9\x01\n" +
+	"\x1bgateway/control/v1/ai.proto\x12\x12gateway.control.v1\x1a\x1egoogle/protobuf/duration.proto\"\xd5\x02\n" +
 	"\x0fAIServiceConfig\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x16\n" +
 	"\x06format\x18\x02 \x01(\tR\x06format\x12\x14\n" +
 	"\x05model\x18\x03 \x01(\tR\x05model\x12;\n" +
 	"\x04auth\x18\x04 \x01(\v2'.gateway.control.v1.AIServiceAuthConfigR\x04auth\x123\n" +
 	"\atimeout\x18\x05 \x01(\v2\x19.google.protobuf.DurationR\atimeout\x12\x1a\n" +
-	"\bendpoint\x18\x06 \x01(\tR\bendpoint\"r\n" +
+	"\bendpoint\x18\x06 \x01(\tR\bendpoint\x12*\n" +
+	"\x11retry_max_retries\x18\a \x01(\rR\x0fretryMaxRetries\x12>\n" +
+	"\rretry_backoff\x18\b \x01(\v2\x19.google.protobuf.DurationR\fretryBackoff\"r\n" +
 	"\x13AIServiceAuthConfig\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x1d\n" +
 	"\n" +
@@ -334,11 +354,12 @@ var file_gateway_control_v1_ai_proto_goTypes = []any{
 var file_gateway_control_v1_ai_proto_depIdxs = []int32{
 	1, // 0: gateway.control.v1.AIServiceConfig.auth:type_name -> gateway.control.v1.AIServiceAuthConfig
 	3, // 1: gateway.control.v1.AIServiceConfig.timeout:type_name -> google.protobuf.Duration
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 2: gateway.control.v1.AIServiceConfig.retry_backoff:type_name -> google.protobuf.Duration
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_gateway_control_v1_ai_proto_init() }

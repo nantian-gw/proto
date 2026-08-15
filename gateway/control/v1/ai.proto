@@ -29,6 +29,10 @@ message AIServiceConfig {
   // Optional endpoint URL override for the AI provider API.
   // If empty, the data plane uses the provider's default endpoint.
   string endpoint = 6;
+  // Maximum number of retry attempts for transient failures.
+  uint32 retry_max_retries = 7;
+  // Base backoff duration between retries.
+  google.protobuf.Duration retry_backoff = 8;
 }
 
 // AIServiceAuthConfig specifies how the data plane authenticates to an AI provider API.
