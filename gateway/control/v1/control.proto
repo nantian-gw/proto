@@ -24,4 +24,3 @@ import "gateway/control/v1/route_policy.proto";
 import "gateway/control/v1/wasm.proto";
 
 option go_package = "github.com/nantian-gw/proto/gateway/control/v1;controlv1";
-
