@@ -325,6 +325,10 @@ enum LoadBalancingPolicyType {
   LOAD_BALANCING_ROUND_ROBIN = 1;
   // Hash requests to consistently map the same client to the same backend.
   LOAD_BALANCING_CONSISTENT_HASH = 2;
+  // Distribute requests to the backend with the fewest active requests.
+  LOAD_BALANCING_LEAST_REQUEST = 3;
+  // Select a healthy backend uniformly at random.
+  LOAD_BALANCING_RANDOM = 4;
 }
 
 // ConsistentHashKeyType selects the key used for consistent-hash load balancing.
@@ -353,6 +357,8 @@ message LoadBalancingPolicy {
   LoadBalancingPolicyType type = 1;
   // Consistent-hash settings (required when type is CONSISTENT_HASH).
   ConsistentHashPolicy consistent_hash = 2;
+  // Gradual weight ramp-up for new endpoints.
+  SlowStartConfig slow_start = 3;
 }
 
 // GrpcRoute defines gRPC-level routing rules. It is the xDS representation
@@ -513,6 +519,10 @@ message BackendCluster {
   WasmPluginConfig wasm_plugin = 13;
   // Per-backend circuit breaker configuration.
   CircuitBreakerConfig circuit_breaker = 14;
+  // Per-backend active health check configuration.
+  HealthCheckConfig health_check = 15;
+  // Per-backend outlier detection configuration.
+  OutlierDetectionConfig outlier_detection = 16;
 }
 
 // CircuitBreakerConfig defines per-backend circuit breaker thresholds.
@@ -522,6 +532,44 @@ message CircuitBreakerConfig {
   // Requests beyond this limit are rejected immediately with a 503.
   // Set to 0 to disable circuit breaking for this backend.
   uint32 max_inflight_requests = 1;
+}
+
+// HealthCheckConfig defines active health checking for a backend cluster.
+// When unset, the data plane uses its global health check settings.
+message HealthCheckConfig {
+  // Health check type: TCP, HTTP, or GRPC.
+  string type = 1;
+  // HTTP/gRPC probe path (required when type is HTTP or GRPC).
+  string path = 2;
+  // HTTP status considered healthy (required when type is HTTP).
+  int32 expected_status = 3;
+  // Interval between probes.
+  google.protobuf.Duration interval = 4;
+  // Per-probe timeout.
+  google.protobuf.Duration timeout = 5;
+  // Consecutive successes required to mark a backend healthy.
+  uint32 healthy_threshold = 6;
+  // Consecutive failures required to mark a backend unhealthy.
+  uint32 unhealthy_threshold = 7;
+}
+
+// OutlierDetectionConfig defines passive health checking (outlier detection).
+// When unset, the data plane uses its built-in defaults.
+message OutlierDetectionConfig {
+  // Consecutive 5xx failures before a backend is ejected.
+  uint32 consecutive_5xx = 1;
+  // How often to run the ejection sweep.
+  google.protobuf.Duration interval = 2;
+  // Base ejection duration; ejected backends stay out for this long.
+  google.protobuf.Duration base_ejection_time = 3;
+  // Maximum percentage of endpoints in a cluster that can be ejected.
+  uint32 max_ejection_percent = 4;
+}
+
+// SlowStartConfig configures gradual weight ramp-up for new endpoints.
+message SlowStartConfig {
+  // Window duration over which endpoint weight ramps from 0 to full.
+  google.protobuf.Duration window = 1;
 }
 
 // BackendEndpoint represents a single backend instance discovered by the control plane.
