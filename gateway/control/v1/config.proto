@@ -127,6 +127,8 @@ message Listener {
   BackendTlsConfig backend_tls = 9;
   // Additional addresses to bind (for dual-stack or multi-interface setups).
   repeated string addresses = 10;
+  // Security policy attached to this listener.
+  SecurityPolicyConfig security_policy = 11;
 }
 
 // TlsConfig specifies TLS settings for a listener's frontend (client-facing) side.
@@ -219,6 +221,8 @@ message HttpRoute {
   // Per-route policy overrides for timeout, body size, proxy buffering,
   // and connection keepalive settings.
   RoutePolicy route_policy = 8;
+  // Security policy attached to this route.
+  SecurityPolicyConfig security_policy = 9;
 }
 
 // HttpRule defines a single HTTP routing rule: match conditions, filters
@@ -381,6 +385,8 @@ message GrpcRoute {
   // Per-route policy overrides for timeout, body size, proxy buffering,
   // and connection keepalive settings.
   RoutePolicy route_policy = 8;
+  // Security policy attached to this route.
+  SecurityPolicyConfig security_policy = 9;
 }
 
 // GrpcRule defines a single gRPC routing rule: service/method matching,
@@ -523,6 +529,8 @@ message BackendCluster {
   HealthCheckConfig health_check = 15;
   // Per-backend outlier detection configuration.
   OutlierDetectionConfig outlier_detection = 16;
+  // Security policy attached to this backend cluster.
+  SecurityPolicyConfig security_policy = 17;
 }
 
 // CircuitBreakerConfig defines per-backend circuit breaker thresholds.
@@ -624,4 +632,207 @@ message SecretMaterial {
   string cert_pem = 3;
   // PEM-encoded private key data.
   string key_pem = 4;
+  // BasicAuth htpasswd content (bcrypt hash lines).
+  string htpasswd = 5;
+  // OIDC client secret.
+  string oidc_client_secret = 6;
+}
+
+// ============================================================
+// Security Policy types (gateway.nantian.dev/v1alpha1 SecurityPolicy CRD)
+// ============================================================
+
+// SecurityPolicyConfig is the unified security policy attached to
+// Listener / HTTPRoute / GRPCRoute / BackendCluster level.
+message SecurityPolicyConfig {
+  // Authentication configuration (JWT, OIDC, or BasicAuth).
+  SecurityAuthNConfig authn = 1;
+  // Authorization configuration (external auth service).
+  SecurityAuthZConfig authz = 2;
+  // CORS configuration.
+  SecurityCORSConfig cors = 3;
+  // Rate limiting rules (ordered list).
+  repeated RateLimitRule rate_limit = 4;
+  // IP-based access control.
+  SecurityIPConfig ip = 5;
+}
+
+// SecurityAuthNConfig aggregates authentication methods.
+message SecurityAuthNConfig {
+  // JWT authentication configuration.
+  JwtAuthConfig jwt = 1;
+  // OIDC Authorization Code flow configuration.
+  OIDCConfig oidc = 2;
+  // HTTP Basic Authentication (htpasswd/bcrypt).
+  BasicAuthConfig basic_auth = 3;
+}
+
+// SecurityAuthZConfig aggregates authorization methods.
+message SecurityAuthZConfig {
+  // External authorization service (ext_authz equivalent).
+  ExternalAuthConfig external = 1;
+}
+
+// SecurityCORSConfig defines the CORS policy.
+message SecurityCORSConfig {
+  // List of allowed origins.
+  repeated string allow_origins = 1;
+  // List of allowed HTTP methods.
+  repeated string allow_methods = 2;
+  // List of allowed request headers.
+  repeated string allow_headers = 3;
+  // List of headers the browser can read from the response.
+  repeated string expose_headers = 4;
+  // Whether credentials are allowed.
+  bool allow_credentials = 5;
+  // Maximum age (seconds) for preflight cache.
+  int32 max_age = 6;
+}
+
+// RateLimitRule defines a single rate limiting rule.
+message RateLimitRule {
+  // Scope: global, listener, route, or backend.
+  RateLimitScope scope = 1;
+  // Requests per second allowed.
+  uint32 requests_per_second = 2;
+  // Burst size.
+  uint32 burst = 3;
+  // Key type: sourceIP, header, route.
+  string key_type = 4;
+  // Action when limit exceeded.
+  RateLimitAction on_limit = 5;
+  // Header name when key_type is header.
+  string key_header_name = 6;
+}
+
+// RateLimitScope determines which traffic volume is counted.
+enum RateLimitScope {
+  // Unspecified scope.
+  RATE_LIMIT_SCOPE_UNSPECIFIED = 0;
+  // Apply to all traffic globally.
+  RATE_LIMIT_SCOPE_GLOBAL = 1;
+  // Apply per listener.
+  RATE_LIMIT_SCOPE_LISTENER = 2;
+  // Apply per route.
+  RATE_LIMIT_SCOPE_ROUTE = 3;
+  // Apply per backend cluster.
+  RATE_LIMIT_SCOPE_BACKEND = 4;
+}
+
+// RateLimitAction determines the behavior when limit is exceeded.
+enum RateLimitAction {
+  // Unspecified action.
+  RATE_LIMIT_ACTION_UNSPECIFIED = 0;
+  // Reject the request with 429.
+  RATE_LIMIT_ACTION_REJECT = 1;
+  // Queue the request for delayed processing.
+  RATE_LIMIT_ACTION_QUEUE = 2;
+}
+
+// SecurityIPConfig defines IP-based access control rules.
+message SecurityIPConfig {
+  // CIDR ranges to allow.
+  repeated string allow_cidrs = 1;
+  // CIDR ranges to deny.
+  repeated string deny_cidrs = 2;
+}
+
+// JwtAuthConfig is the JWT authentication policy.
+message JwtAuthConfig {
+  // JWT issuers to validate.
+  repeated JwtIssuer issuers = 1;
+}
+
+// JwtIssuer defines a single JWT issuer configuration.
+message JwtIssuer {
+  // The expected issuer URL.
+  string issuer = 1;
+  // JSON Web Key Set URL.
+  string jwks_url = 2;
+  // Expected audience.
+  string audience = 3;
+  // Header name where the JWT is found.
+  string header_name = 4;
+  // Token prefix stripped before forwarding.
+  string token_prefix = 5;
+  // Claims to extract and forward as headers.
+  map<string, string> claims_to_headers = 6;
+  // JWKS cache TTL in seconds.
+  int32 cache_ttl_secs = 7;
+}
+
+// OIDCConfig is the OIDC Authorization Code flow policy.
+message OIDCConfig {
+  // OIDC Provider authorization endpoint.
+  string provider_authorization_url = 1;
+  // OIDC Provider token endpoint.
+  string provider_token_url = 2;
+  // OIDC Provider JWKS URL.
+  string provider_jwks_url = 3;
+  // OIDC Provider userinfo endpoint.
+  string provider_userinfo_url = 4;
+  // OAuth2 client ID.
+  string client_id = 5;
+  // OAuth2 client secret reference.
+  string client_secret_ref = 6;
+  // Callback path for authorization code exchange.
+  string callback_path = 7;
+  // Scopes to request during authorization.
+  repeated string scopes = 8;
+  // Redirect URL after successful authentication.
+  string redirect_url = 9;
+  // HMAC signing key reference.
+  string session_signing_key_ref = 10;
+  // Session cookie name.
+  string session_cookie_name = 11;
+  // Session TTL in seconds.
+  int32 session_ttl_secs = 12;
+}
+
+// BasicAuthConfig is the HTTP Basic Authentication policy.
+message BasicAuthConfig {
+  // BasicAuth htpasswd content (bcrypt hash lines).
+  string htpasswd_ref = 1;
+  // Whether passwords are bcrypt-hashed.
+  bool bcrypt = 2;
+  // WWW-Authenticate realm string.
+  string realm = 3;
+}
+
+// ExternalAuthConfig defines external authorization service settings.
+message ExternalAuthConfig {
+  // Transport protocol for the external auth service.
+  ExternalAuthTransport protocol = 1;
+  // Backend reference for the external auth service.
+  BackendRef backend_ref = 2;
+  // HTTP-specific settings.
+  ExternalAuthHTTP http = 3;
+  // gRPC-specific settings.
+  ExternalAuthGRPC grpc = 4;
+  // Maximum body size in bytes to forward.
+  int32 forward_body_max_size = 5;
+}
+
+// ExternalAuthTransport specifies the transport to the external auth service.
+enum ExternalAuthTransport {
+  // Unspecified transport.
+  EXTERNAL_AUTH_TRANSPORT_UNSPECIFIED = 0;
+  // HTTP transport.
+  EXTERNAL_AUTH_TRANSPORT_HTTP = 1;
+  // gRPC transport.
+  EXTERNAL_AUTH_TRANSPORT_GRPC = 2;
+}
+
+// ExternalAuthHTTP contains HTTP-specific external auth settings.
+message ExternalAuthHTTP {
+  // Path prefix for the external auth HTTP request.
+  string path_prefix = 1;
+  // Headers to forward to the external auth service.
+  repeated string headers_to_add = 2;
+}
+
+// ExternalAuthGRPC defines gRPC-specific external authorization settings.
+message ExternalAuthGRPC {
+  // Fully qualified gRPC service method name.
+  string grpc_service = 1;
 }
